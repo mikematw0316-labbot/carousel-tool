@@ -21,6 +21,7 @@
 
     /* Gallery */
     #tpl-grid{ flex:1; overflow-y:auto; display:grid; grid-template-columns:1fr 1fr; gap:2px; background:var(--border); }
+    .cat-hdr{ grid-column:1/-1; background:var(--bg); padding:12px 16px 8px; font-size:12px; font-weight:700; color:#666; letter-spacing:.08em; text-transform:uppercase; border-bottom:1px solid var(--border); }
     .tcard{ background:var(--s1); cursor:pointer; }
     .tcard:active{ opacity:.7; }
     .tcard canvas{ display:block; width:100%; height:auto; }
@@ -107,30 +108,77 @@
 // ── Templates ─────────────────────────────────────────
 // slots: x/y/w/h in slide-units (1 unit = 1 slide width/height)
 const TPLS = [
-  { id:'a1', name:'雙格全景',   slides:2, photos:1,
+  // ── 基本版型 ──
+  { id:'a1', cat:'basic', name:'雙格全景',   slides:2, photos:1,
     slots:[{x:0,y:0,w:2,h:1}] },
-  { id:'a2', name:'左大右雙',   slides:2, photos:3,
+  { id:'a2', cat:'basic', name:'左大右雙',   slides:2, photos:3,
     slots:[{x:0,y:0,w:1,h:1},{x:1,y:0,w:1,h:.5},{x:1,y:.5,w:1,h:.5}] },
-  { id:'a3', name:'三格全景',   slides:3, photos:1,
+  { id:'a3', cat:'basic', name:'三格全景',   slides:3, photos:1,
     slots:[{x:0,y:0,w:3,h:1}] },
-  { id:'a4', name:'全景加側',   slides:3, photos:2,
+  { id:'a4', cat:'basic', name:'全景加側',   slides:3, photos:2,
     slots:[{x:0,y:0,w:2,h:1},{x:2,y:0,w:1,h:1}] },
-  { id:'a5', name:'側加全景',   slides:3, photos:2,
+  { id:'a5', cat:'basic', name:'側加全景',   slides:3, photos:2,
     slots:[{x:0,y:0,w:1,h:1},{x:1,y:0,w:2,h:1}] },
-  { id:'a6', name:'三格並排',   slides:3, photos:3,
+  { id:'a6', cat:'basic', name:'三格並排',   slides:3, photos:3,
     slots:[{x:0,y:0,w:1,h:1},{x:1,y:0,w:1,h:1},{x:2,y:0,w:1,h:1}] },
-  { id:'a7', name:'右大左雙',   slides:2, photos:3,
+  { id:'a7', cat:'basic', name:'右大左雙',   slides:2, photos:3,
     slots:[{x:0,y:0,w:1,h:.5},{x:0,y:.5,w:1,h:.5},{x:1,y:0,w:1,h:1}] },
-  { id:'a8', name:'四格全景',   slides:4, photos:1,
+  { id:'a8', cat:'basic', name:'四格全景',   slides:4, photos:1,
     slots:[{x:0,y:0,w:4,h:1}] },
-  { id:'a9', name:'四格並排',   slides:4, photos:4,
+  { id:'a9', cat:'basic', name:'四格並排',   slides:4, photos:4,
     slots:[{x:0,y:0,w:1,h:1},{x:1,y:0,w:1,h:1},{x:2,y:0,w:1,h:1},{x:3,y:0,w:1,h:1}] },
-  { id:'b1', name:'側全景側',   slides:4, photos:3,
+  { id:'b1', cat:'basic', name:'側全景側',   slides:4, photos:3,
     slots:[{x:0,y:0,w:1,h:1},{x:1,y:0,w:2,h:1},{x:3,y:0,w:1,h:1}] },
-  { id:'b2', name:'四格上下',   slides:2, photos:4,
+  { id:'b2', cat:'basic', name:'四格上下',   slides:2, photos:4,
     slots:[{x:0,y:0,w:1,h:.5},{x:0,y:.5,w:1,h:.5},{x:1,y:0,w:1,h:.5},{x:1,y:.5,w:1,h:.5}] },
-  { id:'b3', name:'五格全景',   slides:5, photos:1,
+  { id:'b3', cat:'basic', name:'五格全景',   slides:5, photos:1,
     slots:[{x:0,y:0,w:5,h:1}] },
+
+  // ── 創意版型 ──
+  { id:'c1', cat:'creative', name:'上景下雙', slides:1, photos:3,
+    slots:[{x:0,y:0,w:1,h:.55},{x:0,y:.55,w:.5,h:.45},{x:.5,y:.55,w:.5,h:.45}] },
+
+  { id:'c2', cat:'creative', name:'下景上雙', slides:1, photos:3,
+    slots:[{x:0,y:0,w:.5,h:.45},{x:.5,y:0,w:.5,h:.45},{x:0,y:.45,w:1,h:.55}] },
+
+  { id:'c3', cat:'creative', name:'五格雜誌', slides:1, photos:5,
+    slots:[
+      {x:0,y:0,w:1,h:.38},
+      {x:0,y:.38,w:.5,h:.31},{x:.5,y:.38,w:.5,h:.31},
+      {x:0,y:.69,w:.5,h:.31},{x:.5,y:.69,w:.5,h:.31}
+    ] },
+
+  { id:'c4', cat:'creative', name:'一大三欄', slides:2, photos:4,
+    slots:[
+      {x:0,y:0,w:1,h:1},
+      {x:1,y:0,w:1,h:.33},{x:1,y:.33,w:1,h:.34},{x:1,y:.67,w:1,h:.33}
+    ] },
+
+  { id:'c5', cat:'creative', name:'大景四格', slides:3, photos:5,
+    slots:[
+      {x:0,y:0,w:2,h:1},
+      {x:2,y:0,w:.5,h:.5},{x:2.5,y:0,w:.5,h:.5},
+      {x:2,y:.5,w:.5,h:.5},{x:2.5,y:.5,w:.5,h:.5}
+    ] },
+
+  { id:'c6', cat:'creative', name:'雙橫貫穿', slides:3, photos:2,
+    slots:[
+      {x:0,y:0,w:3,h:.5},
+      {x:0,y:.5,w:3,h:.5}
+    ] },
+
+  { id:'c7', cat:'creative', name:'九宮格',   slides:3, photos:9,
+    slots:[
+      {x:0,y:0,w:1,h:.33},{x:0,y:.33,w:1,h:.34},{x:0,y:.67,w:1,h:.33},
+      {x:1,y:0,w:1,h:.33},{x:1,y:.33,w:1,h:.34},{x:1,y:.67,w:1,h:.33},
+      {x:2,y:0,w:1,h:.33},{x:2,y:.33,w:1,h:.34},{x:2,y:.67,w:1,h:.33}
+    ] },
+
+  { id:'c8', cat:'creative', name:'錯落拼貼', slides:2, photos:4,
+    slots:[
+      {x:0,y:0,w:1.5,h:1},
+      {x:1.5,y:0,w:.5,h:.33},{x:1.5,y:.33,w:.5,h:.34},{x:1.5,y:.67,w:.5,h:.33}
+    ] },
 ];
 
 const SLOT_COLORS = ['#1a2535','#251a35','#1a3525','#352520','#25351a','#201a35','#35251a','#1a2535'];
@@ -161,17 +209,29 @@ function goBack() { goTo('gallery'); }
 function buildGallery() {
   const grid = document.getElementById('tpl-grid');
   const cardW = Math.floor((window.innerWidth - 4) / 2);
+  let lastCat = null;
 
   TPLS.forEach(tpl => {
+    // Category header
+    if (tpl.cat !== lastCat) {
+      lastCat = tpl.cat;
+      const hdr = document.createElement('div');
+      hdr.className = 'cat-hdr';
+      hdr.textContent = tpl.cat === 'creative' ? '✦ 創意版型' : '基本版型';
+      grid.appendChild(hdr);
+    }
+
     const card = document.createElement('div');
     card.className = 'tcard';
     card.onclick = () => startEditor(tpl);
 
     const cvs = document.createElement('canvas');
-    const th = Math.floor(cardW / tpl.slides);
-    cvs.width  = cardW;
-    cvs.height = th;
-    drawLayout(cvs, tpl, cardW / tpl.slides, false, true);
+    // Preview: cap tile size so it fits in card width nicely
+    const tileW = Math.min(Math.floor(cardW / tpl.slides), cardW);
+    const previewW = tileW * tpl.slides;
+    cvs.style.width = '100%';
+    cvs.style.height = 'auto';
+    drawLayout(cvs, tpl, tileW, false, true);
     card.appendChild(cvs);
 
     const info = document.createElement('div');
