@@ -22,7 +22,7 @@
     .cat-hdr{ background:#000; padding:22px 16px 8px; font-size:10px; font-weight:600; color:#444; letter-spacing:.14em; text-transform:uppercase; }
     .tcard{ background:#111; cursor:pointer; position:relative; overflow:hidden; }
     .tcard:active{ opacity:.8; }
-    .tcard img{ display:block; height:110px; width:auto; pointer-events:none; }
+    .tcard img{ display:block; width:100%; height:auto; pointer-events:none; }
     .tcard-info{ position:absolute; bottom:0; left:0; right:0; padding:32px 14px 12px; background:linear-gradient(transparent,rgba(0,0,0,.85)); display:flex; align-items:flex-end; justify-content:space-between; pointer-events:none; }
     .tcard-name{ font-size:13px; font-weight:500; color:rgba(255,255,255,.92); }
     .tcard-meta{ font-size:11px; color:rgba(255,255,255,.38); }
@@ -290,10 +290,11 @@ function goBack() { hideUpdateBtn(); document.getElementById('zoom-ctrl').classL
 function isOv(sl) { return !!sl.ov; }
 
 // ── Gallery ───────────────────────────────────────────
-const PREVIEW_H = 110; // px — fixed tile height for gallery cards
-
 function buildGallery() {
   const grid = document.getElementById('tpl-grid');
+  const screenW = window.innerWidth - 4;
+  const MAX_PREV = 3;  // show at most 3 slides in preview
+  const MAX_TILE = 260; // cap tile px to avoid huge canvas
   let lastCat = null;
 
   TPLS.forEach(tpl => {
@@ -309,17 +310,33 @@ function buildGallery() {
     card.className = 'tcard';
     card.onclick = () => startEditor(tpl);
 
-    // Draw at fixed tile height — convert to img immediately to avoid iOS canvas memory limits
+    // Scale: fit up to MAX_PREV slides across screen width
+    // Single-slide templates → large square card (SCRL-style)
+    // More slides → proportionally shorter card
+    const prevSlides = Math.min(tpl.slides, MAX_PREV);
+    const tileW = Math.min(Math.floor(screenW / prevSlides), MAX_TILE);
+
+    // Draw full template, then crop to prevSlides width if template has more
     const tempCvs = document.createElement('canvas');
-    drawLayout(tempCvs, tpl, PREVIEW_H, true);
+    drawLayout(tempCvs, tpl, tileW, true);
+    let srcCvs = tempCvs;
+    if (tpl.slides > MAX_PREV) {
+      const cw = prevSlides * tileW;
+      srcCvs = document.createElement('canvas');
+      srcCvs.width = cw; srcCvs.height = tileW;
+      srcCvs.getContext('2d').drawImage(tempCvs, 0, 0);
+    }
+
+    // Convert to img — avoids iOS canvas memory limit that silently breaks later cards
     const img = new Image();
-    img.src = tempCvs.toDataURL('image/jpeg', 0.88);
-    img.style.cssText = `display:block;height:${PREVIEW_H}px;width:auto;pointer-events:none;`;
+    img.src = srcCvs.toDataURL('image/jpeg', 0.88);
+    img.style.cssText = 'display:block;width:100%;height:auto;pointer-events:none;';
     card.appendChild(img);
 
+    const moreLabel = tpl.slides > MAX_PREV ? `+${tpl.slides - MAX_PREV} ` : '';
     const info = document.createElement('div');
     info.className = 'tcard-info';
-    info.innerHTML = `<span class="tcard-name">${tpl.name}</span><span class="tcard-meta">${tpl.slides} 格 · ${tpl.photos} 張</span>`;
+    info.innerHTML = `<span class="tcard-name">${tpl.name}</span><span class="tcard-meta">${moreLabel}${tpl.slides}格 · ${tpl.photos}張</span>`;
     card.appendChild(info);
     grid.appendChild(card);
   });
@@ -334,16 +351,16 @@ function drawLayout(canvas, tpl, tileSize, gradient) {
   ctx.fillRect(0,0,W,H);
 
   const gap = Math.max(2, tileSize * 0.016);
-  // Photo-mood gradients: each slot looks like a real photo in different lighting
+  // Photo-mood gradients: vivid, photo-like colours per slot
   const PHOTO_MOODS = [
-    ['#c4956a','#7a5030'],  // warm portrait / skin
-    ['#6a90b4','#38607a'],  // cool sky / ocean
-    ['#8aaa78','#506840'],  // nature green
-    ['#b89060','#7a5830'],  // golden hour
-    ['#7a9aaa','#486070'],  // misty / morning
-    ['#b07858','#704838'],  // terracotta
-    ['#88a890','#506858'],  // sage / forest
-    ['#a08888','#685858'],  // neutral warm
+    ['#e8b87a','#a06838'],  // golden hour / warm portrait
+    ['#7ab4e0','#3870a8'],  // bright sky blue
+    ['#a8cc80','#587840'],  // lush green nature
+    ['#f0a878','#a05838'],  // warm sunset orange
+    ['#88c0d0','#407888'],  // cool misty ocean
+    ['#e0b090','#906050'],  // sand / beach warm
+    ['#98cca8','#508060'],  // soft sage forest
+    ['#c8a8d0','#786088'],  // lavender dusk
   ];
 
   // Pass 1: regular (background) slots
@@ -402,9 +419,9 @@ function drawOvPreview(ctx, sl, tileSize) {
     ctx.shadowColor='transparent'; ctx.shadowBlur=0;
   }
   const iw=w-fw*2, ih=h-fw*2;
-  // Warm gradient for overlay photo placeholder
+  // Warm portrait gradient for overlay photo placeholder
   const og = ctx.createLinearGradient(-iw/2,-ih/2,iw/2,ih/2);
-  og.addColorStop(0,'#c49070'); og.addColorStop(1,'#886048');
+  og.addColorStop(0,'#e0b088'); og.addColorStop(1,'#986048');
   ctx.fillStyle = og;
   ctx.fillRect(-iw/2,-ih/2,iw,ih);
   ctx.restore();
