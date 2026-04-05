@@ -21,40 +21,45 @@
 
     /* Gallery */
     #tpl-grid{ flex:1; overflow-y:auto; display:grid; grid-template-columns:1fr 1fr; gap:2px; background:var(--border); }
-    .tcard{ background:var(--s1); cursor:pointer; active-transform:scale(.97); }
+    .tcard{ background:var(--s1); cursor:pointer; }
+    .tcard:active{ opacity:.7; }
     .tcard canvas{ display:block; width:100%; height:auto; }
     .tcard-info{ padding:8px 10px 12px; }
     .tcard-info strong{ display:block; font-size:13px; margin-bottom:3px; }
     .tcard-info span{ font-size:11px; color:#666; }
 
-    /* Detail */
-    #detail-scroll{ flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; }
-    #detail-cvs-wrap{ background:#0a0a0a; padding:24px 16px; display:flex; flex-direction:column; align-items:center; gap:10px; }
-    #detail-cvs-scroll{ overflow-x:auto; -webkit-overflow-scrolling:touch; }
-    #detail-dots{ display:flex; gap:5px; }
-    .dot{ width:6px; height:6px; border-radius:50%; background:#333; }
-    .dot.on{ background:#fff; }
-    #detail-meta{ padding:16px; border-bottom:1px solid var(--border); }
-    #detail-meta h2{ font-size:16px; margin-bottom:4px; }
-    #detail-meta p{ font-size:13px; color:#666; }
-    #detail-btns{ display:flex; justify-content:flex-end; gap:16px; padding:14px 16px; border-bottom:1px solid var(--border); }
-    #detail-btns button{ background:none; border:none; font-size:22px; color:#555; cursor:pointer; padding:4px; }
-    #btn-use{ margin:16px; padding:16px; background:#fff; color:#000; border:none; border-radius:12px; font-size:16px; font-weight:600; cursor:pointer; display:block; width:calc(100% - 32px); }
-    #btn-use:active{ background:#ddd; }
-
     /* Editor */
-    #editor-scroll{ flex:1; overflow:auto; background:#111; display:flex; align-items:center; padding:20px; -webkit-overflow-scrolling:touch; }
-    #editor-canvas{ display:block; touch-action:none; }
-    #editor-bar{ background:var(--s1); border-top:1px solid var(--border); padding:8px 0 env(safe-area-inset-bottom,8px); display:flex; justify-content:space-around; align-items:center; flex-shrink:0; }
-    .bbar-btn{ display:flex; flex-direction:column; align-items:center; gap:3px; background:none; border:none; color:#555; cursor:pointer; font-size:10px; padding:6px 12px; }
-    .bbar-btn .ico{ font-size:20px; color:#aaa; }
-    #bbar-add{ background:#fff; color:#000; border-radius:50%; width:52px; height:52px; font-size:30px; border:none; cursor:pointer; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-weight:300; }
+    #editor-scroll{
+      flex:1; overflow:auto; background:#111;
+      -webkit-overflow-scrolling:touch;
+      display:flex; align-items:center; justify-content:center;
+    }
+    #editor-canvas{ display:block; touch-action:none; flex-shrink:0; }
+
+    /* Export overlay */
+    #export-overlay{
+      position:fixed; inset:0; background:rgba(0,0,0,.96); z-index:200;
+      display:none; flex-direction:column;
+    }
+    #export-overlay.show{ display:flex; }
+    #export-hdr{ display:flex; align-items:center; padding:12px 16px; border-bottom:1px solid var(--border); flex-shrink:0; }
+    #export-hdr h2{ flex:1; text-align:center; font-size:16px; }
+    #export-close{ background:none; border:none; color:var(--accent); font-size:22px; cursor:pointer; min-width:44px; min-height:44px; display:flex; align-items:center; justify-content:center; }
+    #export-tip{ padding:10px 16px 6px; font-size:13px; color:#888; text-align:center; flex-shrink:0; }
+    #export-imgs{
+      flex:1; overflow-y:auto; display:flex; flex-direction:column;
+      gap:16px; padding:16px; -webkit-overflow-scrolling:touch;
+      align-items:center;
+    }
+    .export-item{ width:100%; max-width:400px; }
+    .export-item img{ width:100%; display:block; border-radius:6px; }
+    .export-label{ font-size:12px; color:#555; text-align:center; margin-top:6px; }
 
     /* File input */
     #file-input{ display:none; }
 
     /* Toast */
-    #toast{ position:fixed; bottom:90px; left:50%; transform:translateX(-50%) translateY(10px); background:rgba(0,0,0,.88); color:#fff; padding:9px 18px; border-radius:20px; font-size:13px; opacity:0; transition:all .25s; pointer-events:none; z-index:999; white-space:nowrap; max-width:80vw; text-align:center; }
+    #toast{ position:fixed; bottom:40px; left:50%; transform:translateX(-50%) translateY(10px); background:rgba(20,20,20,.92); color:#fff; padding:9px 18px; border-radius:20px; font-size:13px; opacity:0; transition:all .25s; pointer-events:none; z-index:999; white-space:nowrap; max-width:80vw; text-align:center; }
     #toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
   </style>
 </head>
@@ -70,47 +75,27 @@
   <div id="tpl-grid"></div>
 </div>
 
-<!-- ── Page: Detail ── -->
-<div id="pg-detail" class="page off-right">
-  <div class="hdr">
-    <button class="hbtn lg" onclick="goBack('gallery')">‹</button>
-    <h1>模板預覽</h1>
-    <div style="min-width:44px"></div>
-  </div>
-  <div id="detail-scroll">
-    <div id="detail-cvs-wrap">
-      <div id="detail-cvs-scroll"><canvas id="detail-canvas"></canvas></div>
-      <div id="detail-dots"></div>
-    </div>
-    <div id="detail-meta">
-      <h2 id="d-name">—</h2>
-      <p id="d-desc">—</p>
-    </div>
-    <div id="detail-btns">
-      <button title="分享" onclick="showToast('分享功能即將推出')">⬆</button>
-      <button title="收藏" onclick="showToast('收藏功能即將推出')">🔖</button>
-    </div>
-    <button id="btn-use" onclick="startEditor()">使用模板</button>
-  </div>
-</div>
-
 <!-- ── Page: Editor ── -->
 <div id="pg-editor" class="page off-right">
   <div class="hdr">
-    <button class="hbtn lg" onclick="goBack('detail')">‹</button>
+    <button class="hbtn lg" onclick="goBack()">‹</button>
     <h1 id="editor-title">編輯</h1>
     <button class="hbtn blue" onclick="saveAll()">儲存</button>
   </div>
   <div id="editor-scroll">
     <canvas id="editor-canvas"></canvas>
   </div>
-  <div id="editor-bar">
-    <button class="bbar-btn" onclick="showToast('即將推出')"><span class="ico">⬤</span>背景</button>
-    <button class="bbar-btn" onclick="showToast('即將推出')"><span class="ico">⧉</span>圖層</button>
-    <button id="bbar-add" onclick="addToActive()">+</button>
-    <button class="bbar-btn" onclick="showToast('即將推出')"><span class="ico">▣</span>比例</button>
-    <button class="bbar-btn" onclick="showToast('即將推出')"><span class="ico">🎞</span>幻燈片</button>
+</div>
+
+<!-- ── Export overlay ── -->
+<div id="export-overlay">
+  <div id="export-hdr">
+    <div style="min-width:44px"></div>
+    <h2>長按圖片儲存</h2>
+    <button id="export-close" onclick="closeExport()">✕</button>
   </div>
+  <div id="export-tip">📱 長按每張圖片 → 儲存到相冊，依序貼到 Facebook</div>
+  <div id="export-imgs"></div>
 </div>
 
 <input type="file" id="file-input" accept="image/*">
@@ -152,15 +137,16 @@ const SLOT_COLORS = ['#1a2535','#251a35','#1a3525','#352520','#25351a','#201a35'
 
 // ── State ─────────────────────────────────────────────
 let curTpl = null;
-let slotPhotos = [];   // [{img,ox,oy,scale}] or null
+let slotPhotos = [];   // [{img,ox,oy,scale}] or null per slot
 let activeSlot = -1;
+const LOGICAL_S = 300; // logical pixels per slide (canvas internal resolution)
+let viewScale = 1;     // CSS scale of the canvas element
 const EXPORT_PX = 1080;
-let S = 280;  // display slide size (px), set per screen
 
 // ── Page navigation ───────────────────────────────────
 function goTo(id) {
-  const order = ['gallery','detail','editor'];
-  const pages = { gallery:'pg-gallery', detail:'pg-detail', editor:'pg-editor' };
+  const order = ['gallery','editor'];
+  const pages = { gallery:'pg-gallery', editor:'pg-editor' };
   const toIdx = order.indexOf(id);
   order.forEach((p, i) => {
     const el = document.getElementById(pages[p]);
@@ -169,7 +155,7 @@ function goTo(id) {
     if (i < toIdx) el.classList.add('off-left');
   });
 }
-function goBack(id) { goTo(id); }
+function goBack() { goTo('gallery'); }
 
 // ── Gallery ───────────────────────────────────────────
 function buildGallery() {
@@ -179,10 +165,10 @@ function buildGallery() {
   TPLS.forEach(tpl => {
     const card = document.createElement('div');
     card.className = 'tcard';
-    card.onclick = () => openDetail(tpl);
+    card.onclick = () => startEditor(tpl);
 
     const cvs = document.createElement('canvas');
-    const th = Math.floor(cardW / tpl.slides); // tile height = tile width
+    const th = Math.floor(cardW / tpl.slides);
     cvs.width  = cardW;
     cvs.height = th;
     drawLayout(cvs, tpl, cardW / tpl.slides, false, true);
@@ -210,87 +196,68 @@ function drawLayout(canvas, tpl, tileSize, showPlus, gradient) {
     const sx = slot.x * tileSize, sy = slot.y * tileSize;
     const sw = slot.w * tileSize, sh = slot.h * tileSize;
     const gap = Math.max(1.5, tileSize * 0.01);
-
-    const x0 = sx + gap, y0 = sy + gap, w0 = sw - gap*2, h0 = sh - gap*2;
+    const x0=sx+gap, y0=sy+gap, w0=sw-gap*2, h0=sh-gap*2;
 
     if (gradient) {
-      const g = ctx.createLinearGradient(x0, y0, x0+w0, y0+h0);
-      const [c1,c2] = [SLOT_COLORS[i*2 % SLOT_COLORS.length], SLOT_COLORS[(i*2+1) % SLOT_COLORS.length]];
-      g.addColorStop(0, c1); g.addColorStop(1, c2);
+      const g = ctx.createLinearGradient(x0,y0,x0+w0,y0+h0);
+      const c1=SLOT_COLORS[i*2 % SLOT_COLORS.length], c2=SLOT_COLORS[(i*2+1)%SLOT_COLORS.length];
+      g.addColorStop(0,c1); g.addColorStop(1,c2);
       ctx.fillStyle = g;
     } else {
       ctx.fillStyle = '#222';
     }
-    ctx.fillRect(x0, y0, w0, h0);
+    ctx.fillRect(x0,y0,w0,h0);
 
     if (showPlus) {
-      const cx = sx + sw/2, cy = sy + sh/2;
-      const r = Math.min(sw,sh) * 0.14;
+      const cx=sx+sw/2, cy=sy+sh/2, r=Math.min(sw,sh)*0.14;
       ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2);
-      ctx.fillStyle = 'rgba(90,90,90,.85)'; ctx.fill();
-      ctx.fillStyle = '#fff';
-      ctx.font = `bold ${r*1.3}px sans-serif`;
-      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText('+', cx, cy);
+      ctx.fillStyle='rgba(90,90,90,.85)'; ctx.fill();
+      ctx.fillStyle='#fff';
+      ctx.font=`bold ${r*1.3}px sans-serif`;
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText('+',cx,cy);
     }
   });
 
-  // Slide dividers
-  ctx.strokeStyle = 'rgba(255,255,255,.12)';
-  ctx.lineWidth = 1;
+  ctx.strokeStyle='rgba(255,255,255,.12)'; ctx.lineWidth=1;
   for (let i=1; i<tpl.slides; i++) {
-    ctx.beginPath();
-    ctx.moveTo(i*tileSize, 0); ctx.lineTo(i*tileSize, H);
-    ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(i*tileSize,0); ctx.lineTo(i*tileSize,H); ctx.stroke();
   }
-}
-
-// ── Detail ────────────────────────────────────────────
-function openDetail(tpl) {
-  curTpl = tpl;
-  document.getElementById('d-name').textContent = tpl.name;
-  document.getElementById('d-desc').textContent =
-    `直向  📷 ${tpl.photos} 張照片  🔲 ${tpl.slides} 格`;
-
-  // Preview canvas
-  const maxW = Math.min(window.innerWidth - 32, 400);
-  const ts = Math.min(Math.floor(maxW / tpl.slides), 180);
-  const cvs = document.getElementById('detail-canvas');
-  drawLayout(cvs, tpl, ts, false, true);
-
-  // Dots
-  const dots = document.getElementById('detail-dots');
-  dots.innerHTML = '';
-  for (let i=0; i<tpl.slides; i++) {
-    const d = document.createElement('div');
-    d.className = 'dot' + (i===0 ? ' on':'');
-    dots.appendChild(d);
-  }
-
-  goTo('detail');
 }
 
 // ── Editor ────────────────────────────────────────────
 let evBound = false;
 
-function startEditor() {
-  if (!curTpl) return;
-  slotPhotos = curTpl.slots.map(() => null);
+function startEditor(tpl) {
+  curTpl = tpl;
+  slotPhotos = tpl.slots.map(() => null);
   activeSlot = -1;
 
-  document.getElementById('editor-title').textContent = curTpl.name;
-
-  // Compute display size: try to fit 1.2 slides in viewport width
-  const vw = window.innerWidth - 40;
-  S = Math.min(Math.floor(vw * 0.88), 320);
+  document.getElementById('editor-title').textContent = tpl.name;
 
   const cvs = document.getElementById('editor-canvas');
-  cvs.width  = curTpl.slides * S;
-  cvs.height = S;
+  cvs.width  = tpl.slides * LOGICAL_S;
+  cvs.height = LOGICAL_S;
+
+  // Initial zoom: fit all slides in editor area
+  const scrollEl = document.getElementById('editor-scroll');
+  const availW = scrollEl.clientWidth  || window.innerWidth;
+  const availH = (scrollEl.clientHeight || window.innerHeight) - 52;
+  const scaleW = (availW - 32) / cvs.width;
+  const scaleH = (availH - 32) / cvs.height;
+  viewScale = Math.min(1, scaleW, scaleH);
+  applyViewScale();
 
   renderEditor();
   if (!evBound) { bindEvents(); evBound = true; }
   goTo('editor');
+  showToast('雙指縮放全覽 · 點格子+選照片 · 拖曳/縮放照片');
+}
+
+function applyViewScale() {
+  const cvs = document.getElementById('editor-canvas');
+  cvs.style.width  = (cvs.width  * viewScale) + 'px';
+  cvs.style.height = (cvs.height * viewScale) + 'px';
 }
 
 // ── Render ────────────────────────────────────────────
@@ -298,13 +265,14 @@ function renderEditor() {
   const tpl = curTpl;
   const cvs = document.getElementById('editor-canvas');
   const ctx = cvs.getContext('2d');
-  const G = 3; // gap between slots
+  const S = LOGICAL_S;
+  const G = 3;
 
   ctx.fillStyle = '#111';
   ctx.fillRect(0,0,cvs.width,cvs.height);
 
   tpl.slots.forEach((slot, i) => {
-    const sx = slot.x*S, sy = slot.y*S, sw = slot.w*S, sh = slot.h*S;
+    const sx=slot.x*S, sy=slot.y*S, sw=slot.w*S, sh=slot.h*S;
     const x0=sx+G, y0=sy+G, w0=sw-G*2, h0=sh-G*2;
 
     ctx.save();
@@ -315,25 +283,22 @@ function renderEditor() {
       drawPhoto(ctx, ph.img, sx, sy, sw, sh, ph.ox, ph.oy, ph.scale, G);
     } else {
       ctx.fillStyle = '#1d1d1d'; ctx.fillRect(x0,y0,w0,h0);
-      // Plus circle
       const cx=sx+sw/2, cy=sy+sh/2, r=Math.min(sw,sh)*0.13;
       ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2);
-      ctx.fillStyle = i===activeSlot ? '#444':'rgba(80,80,80,.8)'; ctx.fill();
+      ctx.fillStyle = i===activeSlot ? '#555':'rgba(70,70,70,.85)'; ctx.fill();
       ctx.fillStyle='#fff';
-      ctx.font=`bold ${r*1.4}px sans-serif`;
+      ctx.font=`bold ${r*1.5}px sans-serif`;
       ctx.textAlign='center'; ctx.textBaseline='middle';
       ctx.fillText('+',cx,cy);
     }
     ctx.restore();
 
-    // Active highlight
     if (i===activeSlot) {
-      ctx.strokeStyle='#0095f6'; ctx.lineWidth=2;
-      ctx.strokeRect(x0+1,y0+1,w0-2,h0-2);
+      ctx.strokeStyle='#0095f6'; ctx.lineWidth=3;
+      ctx.strokeRect(x0+1.5,y0+1.5,w0-3,h0-3);
     }
   });
 
-  // Slide dividers
   ctx.strokeStyle='rgba(255,255,255,.2)'; ctx.lineWidth=1;
   for (let i=1; i<tpl.slides; i++) {
     ctx.beginPath(); ctx.moveTo(i*S,0); ctx.lineTo(i*S,S); ctx.stroke();
@@ -345,24 +310,23 @@ function drawPhoto(ctx, img, slotX, slotY, slotW, slotH, ox, oy, scale, gap) {
   const sAR = slotW / slotH;
   let dw, dh;
   if (AR > sAR) { dh=slotH*scale; dw=dh*AR; }
-  else           { dw=slotW*scale; dh=dw/AR; }
-  const x = slotX + (slotW-dw)/2 + ox;
-  const y = slotY + (slotH-dh)/2 + oy;
-  ctx.drawImage(img, x, y, dw, dh);
+  else          { dw=slotW*scale; dh=dw/AR; }
+  const x = slotX+(slotW-dw)/2+ox;
+  const y = slotY+(slotH-dh)/2+oy;
+  ctx.drawImage(img,x,y,dw,dh);
 }
 
 // ── Events ────────────────────────────────────────────
-let drag = null;
-let pinch = null;
+let drag  = null;  // {x,y,ox,oy} or null
+let pinch = null;  // {mode:'photo'|'view', d0, s0|vs0}
 
 function bindEvents() {
   const cvs = document.getElementById('editor-canvas');
   const fi  = document.getElementById('file-input');
 
-  // File selected
   fi.addEventListener('change', e => {
     const f = e.target.files[0];
-    if (!f || activeSlot<0) return;
+    if (!f || activeSlot < 0) return;
     const reader = new FileReader();
     reader.onload = ev => {
       const img = new Image();
@@ -371,131 +335,156 @@ function bindEvents() {
         renderEditor();
         showToast('照片已加入 · 拖曳移動 · 雙指縮放');
       };
-      img.onerror = () => showToast('圖片載入失敗');
+      img.onerror = () => showToast('圖片載入失敗，請重試');
       img.src = ev.target.result;
     };
     reader.readAsDataURL(f);
     fi.value = '';
   });
 
-  // Touch
+  // ── Touch ──
   cvs.addEventListener('touchstart', e => {
     e.preventDefault();
-    if (e.touches.length===1) {
+    drag = null; pinch = null;
+
+    if (e.touches.length === 1) {
       const pt = getXY(cvs, e.touches[0]);
       const si = hitSlot(pt.x, pt.y);
-      if (si<0) return;
-      activeSlot = si;
-      renderEditor();
+      if (si < 0) return;
+
       if (!slotPhotos[si]) {
+        // empty slot → select + open picker
+        activeSlot = si;
+        renderEditor();
         fi.click();
       } else {
+        // slot with photo → select + prepare drag
+        activeSlot = si;
+        renderEditor();
         drag = {x:pt.x, y:pt.y, ox:slotPhotos[si].ox, oy:slotPhotos[si].oy};
       }
-    } else if (e.touches.length===2) {
+
+    } else if (e.touches.length === 2) {
+      const d0 = pDist(e.touches);
+      const hasPhoto = activeSlot >= 0 && slotPhotos[activeSlot];
+      if (hasPhoto) {
+        pinch = {mode:'photo', d0, s0: slotPhotos[activeSlot].scale};
+      } else {
+        pinch = {mode:'view', d0, vs0: viewScale};
+      }
       drag = null;
-      const d = pDist(e.touches);
-      const sc = activeSlot>=0 && slotPhotos[activeSlot] ? slotPhotos[activeSlot].scale : 1;
-      pinch = {d0:d, s0:sc};
     }
   }, {passive:false});
 
   cvs.addEventListener('touchmove', e => {
     e.preventDefault();
-    if (pinch && e.touches.length===2) {
+    if (pinch && e.touches.length === 2) {
       const d = pDist(e.touches);
-      const sc = Math.max(.3, Math.min(6, pinch.s0 * d/pinch.d0));
-      if (activeSlot>=0 && slotPhotos[activeSlot]) { slotPhotos[activeSlot].scale=sc; renderEditor(); }
-    } else if (drag && e.touches.length===1) {
+      if (pinch.mode === 'photo' && activeSlot >= 0 && slotPhotos[activeSlot]) {
+        slotPhotos[activeSlot].scale = Math.max(.3, Math.min(8, pinch.s0 * d/pinch.d0));
+        renderEditor();
+      } else if (pinch.mode === 'view') {
+        viewScale = Math.max(.15, Math.min(3, pinch.vs0 * d/pinch.d0));
+        applyViewScale();
+      }
+    } else if (drag && e.touches.length === 1 && activeSlot >= 0 && slotPhotos[activeSlot]) {
       const pt = getXY(cvs, e.touches[0]);
-      slotPhotos[activeSlot].ox = drag.ox + (pt.x-drag.x);
-      slotPhotos[activeSlot].oy = drag.oy + (pt.y-drag.y);
+      slotPhotos[activeSlot].ox = drag.ox + (pt.x - drag.x);
+      slotPhotos[activeSlot].oy = drag.oy + (pt.y - drag.y);
       renderEditor();
     }
   }, {passive:false});
 
-  cvs.addEventListener('touchend', () => { drag=null; pinch=null; });
+  cvs.addEventListener('touchend', e => {
+    if (e.touches.length < 2) pinch = null;
+    if (e.touches.length === 0) drag = null;
+  });
 
-  // Mouse (desktop)
+  // ── Mouse (desktop) ──
   cvs.addEventListener('mousedown', e => {
     const pt = getXY(cvs, e);
     const si = hitSlot(pt.x, pt.y);
-    if (si<0) return;
+    if (si < 0) return;
     activeSlot = si; renderEditor();
     if (!slotPhotos[si]) { fi.click(); }
     else { drag = {x:pt.x, y:pt.y, ox:slotPhotos[si].ox, oy:slotPhotos[si].oy}; }
   });
   cvs.addEventListener('mousemove', e => {
-    if (!drag || activeSlot<0 || !slotPhotos[activeSlot]) return;
+    if (!drag || activeSlot < 0 || !slotPhotos[activeSlot]) return;
     const pt = getXY(cvs, e);
-    slotPhotos[activeSlot].ox = drag.ox + (pt.x-drag.x);
-    slotPhotos[activeSlot].oy = drag.oy + (pt.y-drag.y);
+    slotPhotos[activeSlot].ox = drag.ox + (pt.x - drag.x);
+    slotPhotos[activeSlot].oy = drag.oy + (pt.y - drag.y);
     renderEditor();
   });
-  cvs.addEventListener('mouseup', () => drag=null);
+  cvs.addEventListener('mouseup', () => drag = null);
   cvs.addEventListener('wheel', e => {
     e.preventDefault();
-    if (activeSlot<0||!slotPhotos[activeSlot]) return;
-    slotPhotos[activeSlot].scale = Math.max(.3, Math.min(6, slotPhotos[activeSlot].scale * (e.deltaY>0?.92:1.08)));
-    renderEditor();
+    const factor = e.deltaY > 0 ? .92 : 1.08;
+    if (e.ctrlKey || e.metaKey || !(activeSlot >= 0 && slotPhotos[activeSlot])) {
+      // zoom canvas view
+      viewScale = Math.max(.15, Math.min(3, viewScale * factor));
+      applyViewScale();
+    } else if (activeSlot >= 0 && slotPhotos[activeSlot]) {
+      slotPhotos[activeSlot].scale = Math.max(.3, Math.min(8, slotPhotos[activeSlot].scale * factor));
+      renderEditor();
+    }
   }, {passive:false});
 }
 
 function getXY(cvs, e) {
   const r = cvs.getBoundingClientRect();
-  const sc = cvs.width / r.width;
+  const sc = cvs.width / r.width; // accounts for viewScale
   return { x:(e.clientX-r.left)*sc, y:(e.clientY-r.top)*sc };
 }
-function hitSlot(x,y) {
-  return curTpl.slots.findIndex(sl => x>=sl.x*S && x<(sl.x+sl.w)*S && y>=sl.y*S && y<(sl.y+sl.h)*S);
+function hitSlot(x, y) {
+  const S = LOGICAL_S;
+  return curTpl.slots.findIndex(sl =>
+    x >= sl.x*S && x < (sl.x+sl.w)*S && y >= sl.y*S && y < (sl.y+sl.h)*S
+  );
 }
 function pDist(touches) {
   const dx=touches[0].clientX-touches[1].clientX, dy=touches[0].clientY-touches[1].clientY;
   return Math.sqrt(dx*dx+dy*dy);
 }
 
-function addToActive() {
-  if (activeSlot<0) { showToast('請先點擊要加入照片的區格'); return; }
-  document.getElementById('file-input').click();
-}
-
 // ── Export ────────────────────────────────────────────
 async function saveAll() {
   const tpl = curTpl;
-  if (!slotPhotos.some(p=>p&&p.img)) { showToast('請先加入至少一張照片'); return; }
-  showToast(`正在匯出 ${tpl.slides} 張...`);
+  if (!slotPhotos.some(p => p && p.img)) { showToast('請先加入至少一張照片'); return; }
+
+  showToast(`正在產生 ${tpl.slides} 張圖片...`);
 
   const EP = EXPORT_PX;
-  const scale = EP / S;  // export : display ratio
+  const scaleRatio = EP / LOGICAL_S;
+  const container = document.getElementById('export-imgs');
+  container.innerHTML = '';
 
-  for (let si=0; si<tpl.slides; si++) {
+  for (let si = 0; si < tpl.slides; si++) {
     const off = document.createElement('canvas');
     off.width = off.height = EP;
     const ctx = off.getContext('2d');
+    ctx.fillStyle = '#111'; ctx.fillRect(0,0,EP,EP);
 
-    ctx.fillStyle='#111'; ctx.fillRect(0,0,EP,EP);
-
-    tpl.slots.forEach((slot,i) => {
+    tpl.slots.forEach((slot, i) => {
       const slotX=slot.x*EP, slotY=slot.y*EP, slotW=slot.w*EP, slotH=slot.h*EP;
       const slideL=si*EP, slideR=slideL+EP;
       const oL=Math.max(slotX,slideL), oR=Math.min(slotX+slotW,slideR);
-      if (oL>=oR) return;
+      if (oL >= oR) return;
 
       const clipX=oL-slideL, clipW=oR-oL, clipY=slotY, clipH=slotH;
-
       ctx.save();
       ctx.beginPath(); ctx.rect(clipX,clipY,clipW,clipH); ctx.clip();
 
       const ph = slotPhotos[i];
-      if (ph&&ph.img) {
+      if (ph && ph.img) {
         const img=ph.img;
         const AR=img.naturalWidth/img.naturalHeight, sAR=slotW/slotH;
         let dw,dh;
         if(AR>sAR){dh=slotH*ph.scale;dw=dh*AR;}
         else{dw=slotW*ph.scale;dh=dw/AR;}
-        const ox = ph.ox*scale, oy = ph.oy*scale;
-        const x = slotX-slideL+(slotW-dw)/2+ox;
-        const y = slotY+(slotH-dh)/2+oy;
+        const ox=ph.ox*scaleRatio, oy=ph.oy*scaleRatio;
+        const x=slotX-slideL+(slotW-dw)/2+ox;
+        const y=slotY+(slotH-dh)/2+oy;
         ctx.drawImage(img,x,y,dw,dh);
       } else {
         ctx.fillStyle='#1d1d1d'; ctx.fillRect(clipX,clipY,clipW,clipH);
@@ -503,28 +492,34 @@ async function saveAll() {
       ctx.restore();
     });
 
-    // Download this slide
-    await new Promise(res => {
-      off.toBlob(blob => {
-        const a=document.createElement('a');
-        a.href=URL.createObjectURL(blob);
-        a.download=`第${String(si+1).padStart(2,'0')}格.png`;
-        a.click();
-        setTimeout(()=>{URL.revokeObjectURL(a.href);res();},300);
-      },'image/png');
-    });
-    await new Promise(r=>setTimeout(r,350));
+    // Add to overlay
+    const item = document.createElement('div');
+    item.className = 'export-item';
+    const imgEl = document.createElement('img');
+    imgEl.src = off.toDataURL('image/png');
+    imgEl.alt = `第 ${si+1} 格`;
+    const label = document.createElement('div');
+    label.className = 'export-label';
+    label.textContent = `第 ${si+1} 格（共 ${tpl.slides} 格）`;
+    item.appendChild(imgEl);
+    item.appendChild(label);
+    container.appendChild(item);
   }
 
-  showToast(`✅ 已下載 ${tpl.slides} 張，請按順序貼到 Facebook`);
+  document.getElementById('export-overlay').classList.add('show');
+}
+
+function closeExport() {
+  document.getElementById('export-overlay').classList.remove('show');
 }
 
 // ── Toast ─────────────────────────────────────────────
 let toastT;
 function showToast(msg) {
-  const el=document.getElementById('toast');
-  el.textContent=msg; el.classList.add('show');
-  clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove('show'),3000);
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastT);
+  toastT = setTimeout(() => el.classList.remove('show'), 3000);
 }
 
 // ── Init ──────────────────────────────────────────────
