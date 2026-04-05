@@ -317,8 +317,9 @@ function drawPhoto(ctx, img, slotX, slotY, slotW, slotH, ox, oy, scale, gap) {
 }
 
 // ── Events ────────────────────────────────────────────
-let drag  = null;  // {x,y,ox,oy} or null
-let pinch = null;  // {mode:'photo'|'view', d0, s0|vs0}
+let drag  = null;   // {x,y,ox,oy} or null
+let pinch = null;   // {mode:'photo'|'view', d0, s0|vs0}
+let tapInfo = null; // {si, x, y} for tap detection
 
 function bindEvents() {
   const cvs = document.getElementById('editor-canvas');
@@ -345,26 +346,25 @@ function bindEvents() {
   // ── Touch ──
   cvs.addEventListener('touchstart', e => {
     e.preventDefault();
-    drag = null; pinch = null;
+    drag = null; pinch = null; tapInfo = null;
 
     if (e.touches.length === 1) {
       const pt = getXY(cvs, e.touches[0]);
       const si = hitSlot(pt.x, pt.y);
       if (si < 0) return;
 
-      if (!slotPhotos[si]) {
-        // empty slot → select + open picker
-        activeSlot = si;
-        renderEditor();
-        fi.click();
-      } else {
-        // slot with photo → select + prepare drag
-        activeSlot = si;
-        renderEditor();
+      activeSlot = si;
+      renderEditor();
+      tapInfo = {si, x: pt.x, y: pt.y};
+
+      if (slotPhotos[si]) {
+        // slot with photo → prepare drag (starts on touchstart for responsiveness)
         drag = {x:pt.x, y:pt.y, ox:slotPhotos[si].ox, oy:slotPhotos[si].oy};
       }
+      // empty slot: wait for touchend to call fi.click() (iOS requires touchend for file picker)
 
     } else if (e.touches.length === 2) {
+      tapInfo = null; drag = null;
       const d0 = pDist(e.touches);
       const hasPhoto = activeSlot >= 0 && slotPhotos[activeSlot];
       if (hasPhoto) {
@@ -372,7 +372,6 @@ function bindEvents() {
       } else {
         pinch = {mode:'view', d0, vs0: viewScale};
       }
-      drag = null;
     }
   }, {passive:false});
 
@@ -389,6 +388,9 @@ function bindEvents() {
       }
     } else if (drag && e.touches.length === 1 && activeSlot >= 0 && slotPhotos[activeSlot]) {
       const pt = getXY(cvs, e.touches[0]);
+      const dx = pt.x - tapInfo?.x, dy = pt.y - tapInfo?.y;
+      // If moved more than 6px, it's a drag → cancel tap
+      if (tapInfo && Math.sqrt(dx*dx+dy*dy) > 6) tapInfo = null;
       slotPhotos[activeSlot].ox = drag.ox + (pt.x - drag.x);
       slotPhotos[activeSlot].oy = drag.oy + (pt.y - drag.y);
       renderEditor();
@@ -397,7 +399,14 @@ function bindEvents() {
 
   cvs.addEventListener('touchend', e => {
     if (e.touches.length < 2) pinch = null;
-    if (e.touches.length === 0) drag = null;
+    if (e.touches.length === 0) {
+      // Tap on empty slot → open file picker (must be in touchend for iOS)
+      if (tapInfo !== null && !slotPhotos[tapInfo.si]) {
+        fi.click();
+      }
+      drag = null;
+      tapInfo = null;
+    }
   });
 
   // ── Mouse (desktop) ──
