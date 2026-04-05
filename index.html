@@ -5,68 +5,49 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>輪播製作工具</title>
   <style>
-    :root { --bg:#000; --s1:#111; --s2:#1c1c1c; --border:#2a2a2a; --accent:#fff; --blue:#0095f6; }
+    :root { --bg:#000; --s1:#111; --border:#2a2a2a; --accent:#fff; --blue:#0095f6; }
     *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
     body{ background:var(--bg); color:var(--accent); font-family:-apple-system,'PingFang TC','Microsoft JhengHei',sans-serif; height:100vh; overflow:hidden; }
     .page{ position:fixed; inset:0; display:flex; flex-direction:column; background:var(--bg); transition:transform .25s; }
     .page.off-right{ transform:translateX(100%); }
     .page.off-left{ transform:translateX(-30%); opacity:.5; pointer-events:none; }
 
-    /* Header */
     .hdr{ display:flex; align-items:center; padding:12px 16px; border-bottom:1px solid var(--border); flex-shrink:0; min-height:52px; }
     .hdr h1{ font-size:16px; font-weight:600; flex:1; text-align:center; }
-    .hbtn{ background:none; border:none; color:var(--accent); cursor:pointer; font-size:15px; padding:6px; min-width:44px; min-height:44px; display:flex; align-items:center; justify-content:center; }
+    .hbtn{ background:none; border:none; color:var(--accent); cursor:pointer; padding:6px; min-width:44px; min-height:44px; display:flex; align-items:center; justify-content:center; font-size:15px; }
     .hbtn.lg{ font-size:24px; }
     .hbtn.blue{ color:var(--blue); font-weight:600; }
 
-    /* Gallery */
     #tpl-grid{ flex:1; overflow-y:auto; display:grid; grid-template-columns:1fr 1fr; gap:2px; background:var(--border); }
-    .cat-hdr{ grid-column:1/-1; background:var(--bg); padding:12px 16px 8px; font-size:12px; font-weight:700; color:#666; letter-spacing:.08em; text-transform:uppercase; border-bottom:1px solid var(--border); }
+    .cat-hdr{ grid-column:1/-1; background:#0a0a0a; padding:11px 16px 8px; font-size:11px; font-weight:700; color:#555; letter-spacing:.1em; border-bottom:1px solid var(--border); }
     .tcard{ background:var(--s1); cursor:pointer; }
     .tcard:active{ opacity:.7; }
     .tcard canvas{ display:block; width:100%; height:auto; }
     .tcard-info{ padding:8px 10px 12px; }
     .tcard-info strong{ display:block; font-size:13px; margin-bottom:3px; }
-    .tcard-info span{ font-size:11px; color:#666; }
+    .tcard-info span{ font-size:11px; color:#555; }
 
-    /* Editor */
-    #editor-scroll{
-      flex:1; overflow:auto; background:#111;
-      -webkit-overflow-scrolling:touch;
-      display:flex; align-items:center; justify-content:center;
-    }
+    #editor-scroll{ flex:1; overflow:auto; background:#111; -webkit-overflow-scrolling:touch; display:flex; align-items:center; justify-content:center; }
     #editor-canvas{ display:block; touch-action:none; flex-shrink:0; }
 
-    /* Export overlay */
-    #export-overlay{
-      position:fixed; inset:0; background:rgba(0,0,0,.96); z-index:200;
-      display:none; flex-direction:column;
-    }
+    #export-overlay{ position:fixed; inset:0; background:rgba(0,0,0,.96); z-index:200; display:none; flex-direction:column; }
     #export-overlay.show{ display:flex; }
     #export-hdr{ display:flex; align-items:center; padding:12px 16px; border-bottom:1px solid var(--border); flex-shrink:0; }
     #export-hdr h2{ flex:1; text-align:center; font-size:16px; }
     #export-close{ background:none; border:none; color:var(--accent); font-size:22px; cursor:pointer; min-width:44px; min-height:44px; display:flex; align-items:center; justify-content:center; }
-    #export-tip{ padding:10px 16px 6px; font-size:13px; color:#888; text-align:center; flex-shrink:0; }
-    #export-imgs{
-      flex:1; overflow-y:auto; display:flex; flex-direction:column;
-      gap:16px; padding:16px; -webkit-overflow-scrolling:touch;
-      align-items:center;
-    }
+    #export-tip{ padding:10px 16px 6px; font-size:13px; color:#777; text-align:center; flex-shrink:0; }
+    #export-imgs{ flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:16px; padding:16px; -webkit-overflow-scrolling:touch; align-items:center; }
     .export-item{ width:100%; max-width:400px; }
     .export-item img{ width:100%; display:block; border-radius:6px; }
     .export-label{ font-size:12px; color:#555; text-align:center; margin-top:6px; }
 
-    /* File input */
     #file-input{ display:none; }
-
-    /* Toast */
-    #toast{ position:fixed; bottom:40px; left:50%; transform:translateX(-50%) translateY(10px); background:rgba(20,20,20,.92); color:#fff; padding:9px 18px; border-radius:20px; font-size:13px; opacity:0; transition:all .25s; pointer-events:none; z-index:999; white-space:nowrap; max-width:80vw; text-align:center; }
+    #toast{ position:fixed; bottom:40px; left:50%; transform:translateX(-50%) translateY(10px); background:rgba(20,20,20,.93); color:#fff; padding:9px 18px; border-radius:20px; font-size:13px; opacity:0; transition:all .25s; pointer-events:none; z-index:999; white-space:nowrap; max-width:82vw; text-align:center; }
     #toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
   </style>
 </head>
 <body>
 
-<!-- ── Page: Gallery ── -->
 <div id="pg-gallery" class="page">
   <div class="hdr">
     <div style="min-width:44px"></div>
@@ -76,7 +57,6 @@
   <div id="tpl-grid"></div>
 </div>
 
-<!-- ── Page: Editor ── -->
 <div id="pg-editor" class="page off-right">
   <div class="hdr">
     <button class="hbtn lg" onclick="goBack()">‹</button>
@@ -88,7 +68,6 @@
   </div>
 </div>
 
-<!-- ── Export overlay ── -->
 <div id="export-overlay">
   <div id="export-hdr">
     <div style="min-width:44px"></div>
@@ -106,92 +85,121 @@
 'use strict';
 
 // ── Templates ─────────────────────────────────────────
-// slots: x/y/w/h in slide-units (1 unit = 1 slide width/height)
+// Regular slot:  {x, y, w, h}  — top-left origin, clip region, in slide-units
+// Overlay slot:  {ov:true, cx, cy, w, h, rot?, frame?, shadow?}
+//                cx/cy = center in slide-units; rot = degrees; frame = border % of min dim
 const TPLS = [
+
   // ── 基本版型 ──
-  { id:'a1', cat:'basic', name:'雙格全景',   slides:2, photos:1,
+  { id:'a1', cat:'basic', name:'雙格全景', slides:2, photos:1,
     slots:[{x:0,y:0,w:2,h:1}] },
-  { id:'a2', cat:'basic', name:'左大右雙',   slides:2, photos:3,
+  { id:'a2', cat:'basic', name:'左大右雙', slides:2, photos:3,
     slots:[{x:0,y:0,w:1,h:1},{x:1,y:0,w:1,h:.5},{x:1,y:.5,w:1,h:.5}] },
-  { id:'a3', cat:'basic', name:'三格全景',   slides:3, photos:1,
+  { id:'a3', cat:'basic', name:'三格全景', slides:3, photos:1,
     slots:[{x:0,y:0,w:3,h:1}] },
-  { id:'a4', cat:'basic', name:'全景加側',   slides:3, photos:2,
+  { id:'a4', cat:'basic', name:'全景加側', slides:3, photos:2,
     slots:[{x:0,y:0,w:2,h:1},{x:2,y:0,w:1,h:1}] },
-  { id:'a5', cat:'basic', name:'側加全景',   slides:3, photos:2,
+  { id:'a5', cat:'basic', name:'側加全景', slides:3, photos:2,
     slots:[{x:0,y:0,w:1,h:1},{x:1,y:0,w:2,h:1}] },
-  { id:'a6', cat:'basic', name:'三格並排',   slides:3, photos:3,
+  { id:'a6', cat:'basic', name:'三格並排', slides:3, photos:3,
     slots:[{x:0,y:0,w:1,h:1},{x:1,y:0,w:1,h:1},{x:2,y:0,w:1,h:1}] },
-  { id:'a7', cat:'basic', name:'右大左雙',   slides:2, photos:3,
+  { id:'a7', cat:'basic', name:'右大左雙', slides:2, photos:3,
     slots:[{x:0,y:0,w:1,h:.5},{x:0,y:.5,w:1,h:.5},{x:1,y:0,w:1,h:1}] },
-  { id:'a8', cat:'basic', name:'四格全景',   slides:4, photos:1,
+  { id:'a8', cat:'basic', name:'四格全景', slides:4, photos:1,
     slots:[{x:0,y:0,w:4,h:1}] },
-  { id:'a9', cat:'basic', name:'四格並排',   slides:4, photos:4,
+  { id:'a9', cat:'basic', name:'四格並排', slides:4, photos:4,
     slots:[{x:0,y:0,w:1,h:1},{x:1,y:0,w:1,h:1},{x:2,y:0,w:1,h:1},{x:3,y:0,w:1,h:1}] },
-  { id:'b1', cat:'basic', name:'側全景側',   slides:4, photos:3,
+  { id:'b1', cat:'basic', name:'側全景側', slides:4, photos:3,
     slots:[{x:0,y:0,w:1,h:1},{x:1,y:0,w:2,h:1},{x:3,y:0,w:1,h:1}] },
-  { id:'b2', cat:'basic', name:'四格上下',   slides:2, photos:4,
+  { id:'b2', cat:'basic', name:'四格上下', slides:2, photos:4,
     slots:[{x:0,y:0,w:1,h:.5},{x:0,y:.5,w:1,h:.5},{x:1,y:0,w:1,h:.5},{x:1,y:.5,w:1,h:.5}] },
-  { id:'b3', cat:'basic', name:'五格全景',   slides:5, photos:1,
+  { id:'b3', cat:'basic', name:'五格全景', slides:5, photos:1,
     slots:[{x:0,y:0,w:5,h:1}] },
 
-  // ── 創意版型 ──
-  { id:'c1', cat:'creative', name:'上景下雙', slides:1, photos:3,
+  // ── 拼貼版型 ──
+  { id:'c1', cat:'collage', name:'上景下雙', slides:1, photos:3,
     slots:[{x:0,y:0,w:1,h:.55},{x:0,y:.55,w:.5,h:.45},{x:.5,y:.55,w:.5,h:.45}] },
-
-  { id:'c2', cat:'creative', name:'下景上雙', slides:1, photos:3,
+  { id:'c2', cat:'collage', name:'下景上雙', slides:1, photos:3,
     slots:[{x:0,y:0,w:.5,h:.45},{x:.5,y:0,w:.5,h:.45},{x:0,y:.45,w:1,h:.55}] },
-
-  { id:'c3', cat:'creative', name:'五格雜誌', slides:1, photos:5,
-    slots:[
-      {x:0,y:0,w:1,h:.38},
-      {x:0,y:.38,w:.5,h:.31},{x:.5,y:.38,w:.5,h:.31},
-      {x:0,y:.69,w:.5,h:.31},{x:.5,y:.69,w:.5,h:.31}
-    ] },
-
-  { id:'c4', cat:'creative', name:'一大三欄', slides:2, photos:4,
-    slots:[
-      {x:0,y:0,w:1,h:1},
-      {x:1,y:0,w:1,h:.33},{x:1,y:.33,w:1,h:.34},{x:1,y:.67,w:1,h:.33}
-    ] },
-
-  { id:'c5', cat:'creative', name:'大景四格', slides:3, photos:5,
-    slots:[
-      {x:0,y:0,w:2,h:1},
-      {x:2,y:0,w:.5,h:.5},{x:2.5,y:0,w:.5,h:.5},
-      {x:2,y:.5,w:.5,h:.5},{x:2.5,y:.5,w:.5,h:.5}
-    ] },
-
-  { id:'c6', cat:'creative', name:'雙橫貫穿', slides:3, photos:2,
-    slots:[
-      {x:0,y:0,w:3,h:.5},
-      {x:0,y:.5,w:3,h:.5}
-    ] },
-
-  { id:'c7', cat:'creative', name:'九宮格',   slides:3, photos:9,
+  { id:'c3', cat:'collage', name:'五格雜誌', slides:1, photos:5,
+    slots:[{x:0,y:0,w:1,h:.38},{x:0,y:.38,w:.5,h:.31},{x:.5,y:.38,w:.5,h:.31},{x:0,y:.69,w:.5,h:.31},{x:.5,y:.69,w:.5,h:.31}] },
+  { id:'c4', cat:'collage', name:'一大三欄', slides:2, photos:4,
+    slots:[{x:0,y:0,w:1,h:1},{x:1,y:0,w:1,h:.33},{x:1,y:.33,w:1,h:.34},{x:1,y:.67,w:1,h:.33}] },
+  { id:'c5', cat:'collage', name:'大景四格', slides:3, photos:5,
+    slots:[{x:0,y:0,w:2,h:1},{x:2,y:0,w:.5,h:.5},{x:2.5,y:0,w:.5,h:.5},{x:2,y:.5,w:.5,h:.5},{x:2.5,y:.5,w:.5,h:.5}] },
+  { id:'c6', cat:'collage', name:'雙橫貫穿', slides:3, photos:2,
+    slots:[{x:0,y:0,w:3,h:.5},{x:0,y:.5,w:3,h:.5}] },
+  { id:'c7', cat:'collage', name:'九宮格',   slides:3, photos:9,
     slots:[
       {x:0,y:0,w:1,h:.33},{x:0,y:.33,w:1,h:.34},{x:0,y:.67,w:1,h:.33},
       {x:1,y:0,w:1,h:.33},{x:1,y:.33,w:1,h:.34},{x:1,y:.67,w:1,h:.33},
       {x:2,y:0,w:1,h:.33},{x:2,y:.33,w:1,h:.34},{x:2,y:.67,w:1,h:.33}
     ] },
+  { id:'c8', cat:'collage', name:'錯落拼貼', slides:2, photos:4,
+    slots:[{x:0,y:0,w:1.5,h:1},{x:1.5,y:0,w:.5,h:.33},{x:1.5,y:.33,w:.5,h:.34},{x:1.5,y:.67,w:.5,h:.33}] },
 
-  { id:'c8', cat:'creative', name:'錯落拼貼', slides:2, photos:4,
+  // ── 圖中圖 ──
+  // Background panorama + overlaid framed photos with rotation
+  { id:'d1', cat:'overlay', name:'單格散落', slides:1, photos:4,
     slots:[
-      {x:0,y:0,w:1.5,h:1},
-      {x:1.5,y:0,w:.5,h:.33},{x:1.5,y:.33,w:.5,h:.34},{x:1.5,y:.67,w:.5,h:.33}
+      {x:0,y:0,w:1,h:1},
+      {ov:true, cx:.26, cy:.28, w:.46, h:.46, rot:-14, frame:11, shadow:true},
+      {ov:true, cx:.74, cy:.30, w:.42, h:.42, rot:12,  frame:11, shadow:true},
+      {ov:true, cx:.50, cy:.75, w:.48, h:.48, rot:-7,  frame:11, shadow:true},
+    ] },
+
+  { id:'d2', cat:'overlay', name:'底景雙疊', slides:2, photos:3,
+    slots:[
+      {x:0,y:0,w:2,h:1},
+      {ov:true, cx:.50, cy:.44, w:.68, h:.62, rot:-11, frame:12, shadow:true},
+      {ov:true, cx:1.50, cy:.56, w:.68, h:.62, rot:9,  frame:12, shadow:true},
+    ] },
+
+  { id:'d3', cat:'overlay', name:'底景三疊', slides:3, photos:4,
+    slots:[
+      {x:0,y:0,w:3,h:1},
+      {ov:true, cx:.52, cy:.42, w:.70, h:.64, rot:-13, frame:12, shadow:true},
+      {ov:true, cx:1.50, cy:.58, w:.70, h:.64, rot:7,  frame:12, shadow:true},
+      {ov:true, cx:2.48, cy:.42, w:.70, h:.64, rot:-9, frame:12, shadow:true},
+    ] },
+
+  { id:'d4', cat:'overlay', name:'主景側疊', slides:2, photos:3,
+    slots:[
+      {x:0,y:0,w:1,h:1},
+      {x:1,y:0,w:1,h:1},
+      {ov:true, cx:1.50, cy:.52, w:.68, h:.68, rot:-14, frame:12, shadow:true},
+    ] },
+
+  { id:'d5', cat:'overlay', name:'雙面各疊', slides:2, photos:4,
+    slots:[
+      {x:0,y:0,w:1,h:1},
+      {x:1,y:0,w:1,h:1},
+      {ov:true, cx:.50, cy:.50, w:.66, h:.66, rot:-12, frame:11, shadow:true},
+      {ov:true, cx:1.50, cy:.50, w:.66, h:.66, rot:10,  frame:11, shadow:true},
+    ] },
+
+  { id:'d6', cat:'overlay', name:'大景小疊', slides:3, photos:5,
+    slots:[
+      {x:0,y:0,w:2,h:1},
+      {x:2,y:0,w:1,h:1},
+      {ov:true, cx:.55, cy:.38, w:.55, h:.55, rot:-15, frame:11, shadow:true},
+      {ov:true, cx:1.45, cy:.62, w:.55, h:.55, rot:10,  frame:11, shadow:true},
+      {ov:true, cx:2.50, cy:.50, w:.60, h:.60, rot:-8,  frame:11, shadow:true},
     ] },
 ];
 
-const SLOT_COLORS = ['#1a2535','#251a35','#1a3525','#352520','#25351a','#201a35','#35251a','#1a2535'];
+const SLOT_COLORS = ['#1a2535','#251a35','#1a3525','#352520','#25351a','#201a35','#35251a','#352530'];
+const CAT_LABELS  = { basic:'基本版型', collage:'✦ 拼貼版型', overlay:'◈ 圖中圖' };
 
 // ── State ─────────────────────────────────────────────
 let curTpl = null;
-let slotPhotos = [];   // [{img,ox,oy,scale}] or null per slot
+let slotPhotos = [];
 let activeSlot = -1;
-const LOGICAL_S = 300; // logical pixels per slide (canvas internal resolution)
-let viewScale = 1;     // CSS scale of the canvas element
+const LOGICAL_S = 300;
+let viewScale = 1;
 const EXPORT_PX = 1080;
 
-// ── Page navigation ───────────────────────────────────
+// ── Nav ───────────────────────────────────────────────
 function goTo(id) {
   const order = ['gallery','editor'];
   const pages = { gallery:'pg-gallery', editor:'pg-editor' };
@@ -205,6 +213,9 @@ function goTo(id) {
 }
 function goBack() { goTo('gallery'); }
 
+// ── Slot helpers ──────────────────────────────────────
+function isOv(sl) { return !!sl.ov; }
+
 // ── Gallery ───────────────────────────────────────────
 function buildGallery() {
   const grid = document.getElementById('tpl-grid');
@@ -212,12 +223,11 @@ function buildGallery() {
   let lastCat = null;
 
   TPLS.forEach(tpl => {
-    // Category header
     if (tpl.cat !== lastCat) {
       lastCat = tpl.cat;
       const hdr = document.createElement('div');
       hdr.className = 'cat-hdr';
-      hdr.textContent = tpl.cat === 'creative' ? '✦ 創意版型' : '基本版型';
+      hdr.textContent = CAT_LABELS[tpl.cat] || tpl.cat;
       grid.appendChild(hdr);
     }
 
@@ -226,63 +236,83 @@ function buildGallery() {
     card.onclick = () => startEditor(tpl);
 
     const cvs = document.createElement('canvas');
-    // Preview: cap tile size so it fits in card width nicely
-    const tileW = Math.min(Math.floor(cardW / tpl.slides), cardW);
-    const previewW = tileW * tpl.slides;
     cvs.style.width = '100%';
     cvs.style.height = 'auto';
-    drawLayout(cvs, tpl, tileW, false, true);
+    const tileW = Math.min(Math.floor(cardW / tpl.slides), cardW);
+    drawLayout(cvs, tpl, tileW, true);
     card.appendChild(cvs);
 
     const info = document.createElement('div');
     info.className = 'tcard-info';
     info.innerHTML = `<strong>${tpl.name}</strong><span>📷 ${tpl.photos} 張  🔲 ${tpl.slides} 格</span>`;
     card.appendChild(info);
-
     grid.appendChild(card);
   });
 }
 
-// ── Draw template layout ──────────────────────────────
-function drawLayout(canvas, tpl, tileSize, showPlus, gradient) {
+// ── Draw layout (gallery preview) ────────────────────
+function drawLayout(canvas, tpl, tileSize, gradient) {
   const W = tpl.slides * tileSize, H = tileSize;
   canvas.width = W; canvas.height = H;
   const ctx = canvas.getContext('2d');
-
   ctx.fillStyle = '#0d0d0d';
   ctx.fillRect(0,0,W,H);
 
-  tpl.slots.forEach((slot, i) => {
-    const sx = slot.x * tileSize, sy = slot.y * tileSize;
-    const sw = slot.w * tileSize, sh = slot.h * tileSize;
-    const gap = Math.max(1.5, tileSize * 0.01);
-    const x0=sx+gap, y0=sy+gap, w0=sw-gap*2, h0=sh-gap*2;
+  const gap = Math.max(1.5, tileSize * 0.012);
 
+  // Pass 1: regular (background) slots
+  tpl.slots.forEach((sl, i) => {
+    if (isOv(sl)) return;
+    const sx=sl.x*tileSize, sy=sl.y*tileSize, sw=sl.w*tileSize, sh=sl.h*tileSize;
+    const x0=sx+gap, y0=sy+gap, w0=sw-gap*2, h0=sh-gap*2;
     if (gradient) {
       const g = ctx.createLinearGradient(x0,y0,x0+w0,y0+h0);
-      const c1=SLOT_COLORS[i*2 % SLOT_COLORS.length], c2=SLOT_COLORS[(i*2+1)%SLOT_COLORS.length];
-      g.addColorStop(0,c1); g.addColorStop(1,c2);
+      g.addColorStop(0, SLOT_COLORS[i*2 % SLOT_COLORS.length]);
+      g.addColorStop(1, SLOT_COLORS[(i*2+1) % SLOT_COLORS.length]);
       ctx.fillStyle = g;
-    } else {
-      ctx.fillStyle = '#222';
-    }
+    } else { ctx.fillStyle = '#222'; }
     ctx.fillRect(x0,y0,w0,h0);
-
-    if (showPlus) {
-      const cx=sx+sw/2, cy=sy+sh/2, r=Math.min(sw,sh)*0.14;
-      ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2);
-      ctx.fillStyle='rgba(90,90,90,.85)'; ctx.fill();
-      ctx.fillStyle='#fff';
-      ctx.font=`bold ${r*1.3}px sans-serif`;
-      ctx.textAlign='center'; ctx.textBaseline='middle';
-      ctx.fillText('+',cx,cy);
-    }
   });
 
-  ctx.strokeStyle='rgba(255,255,255,.12)'; ctx.lineWidth=1;
+  // Slide dividers
+  ctx.strokeStyle='rgba(255,255,255,.1)'; ctx.lineWidth=1;
   for (let i=1; i<tpl.slides; i++) {
     ctx.beginPath(); ctx.moveTo(i*tileSize,0); ctx.lineTo(i*tileSize,H); ctx.stroke();
   }
+
+  // Pass 2: overlay slots
+  tpl.slots.forEach((sl, i) => {
+    if (!isOv(sl)) return;
+    drawOvPreview(ctx, sl, i, tileSize, gradient);
+  });
+}
+
+function drawOvPreview(ctx, sl, i, tileSize, gradient) {
+  const cx=sl.cx*tileSize, cy=sl.cy*tileSize;
+  const w=sl.w*tileSize, h=sl.h*tileSize;
+  const rot=(sl.rot||0)*Math.PI/180;
+  const fw=(sl.frame||0)/100*Math.min(w,h);
+
+  ctx.save();
+  ctx.translate(cx,cy);
+  ctx.rotate(rot);
+
+  if (sl.shadow) {
+    ctx.shadowColor='rgba(0,0,0,.55)'; ctx.shadowBlur=6; ctx.shadowOffsetX=2; ctx.shadowOffsetY=2;
+  }
+  if (fw>0) {
+    ctx.fillStyle='#e8e8e8'; ctx.fillRect(-w/2,-h/2,w,h);
+    ctx.shadowColor='transparent'; ctx.shadowBlur=0;
+  }
+  const iw=w-fw*2, ih=h-fw*2;
+  if (gradient) {
+    const g = ctx.createLinearGradient(-iw/2,-ih/2,iw/2,ih/2);
+    g.addColorStop(0, SLOT_COLORS[i*2 % SLOT_COLORS.length]);
+    g.addColorStop(1, SLOT_COLORS[(i*2+1) % SLOT_COLORS.length]);
+    ctx.fillStyle = g;
+  } else { ctx.fillStyle='#333'; }
+  ctx.fillRect(-iw/2,-ih/2,iw,ih);
+  ctx.restore();
 }
 
 // ── Editor ────────────────────────────────────────────
@@ -292,306 +322,367 @@ function startEditor(tpl) {
   curTpl = tpl;
   slotPhotos = tpl.slots.map(() => null);
   activeSlot = -1;
-
   document.getElementById('editor-title').textContent = tpl.name;
 
   const cvs = document.getElementById('editor-canvas');
   cvs.width  = tpl.slides * LOGICAL_S;
   cvs.height = LOGICAL_S;
 
-  // Initial zoom: fit all slides in editor area
   const scrollEl = document.getElementById('editor-scroll');
   const availW = scrollEl.clientWidth  || window.innerWidth;
   const availH = (scrollEl.clientHeight || window.innerHeight) - 52;
-  const scaleW = (availW - 32) / cvs.width;
-  const scaleH = (availH - 32) / cvs.height;
-  viewScale = Math.min(1, scaleW, scaleH);
+  viewScale = Math.min(1, (availW-32)/cvs.width, (availH-32)/cvs.height);
   applyViewScale();
 
   renderEditor();
   if (!evBound) { bindEvents(); evBound = true; }
   goTo('editor');
-  showToast('雙指縮放全覽 · 點格子+選照片 · 拖曳/縮放照片');
+  showToast('點格子+ 新增照片 · 拖曳移動 · 雙指縮放');
 }
 
 function applyViewScale() {
   const cvs = document.getElementById('editor-canvas');
-  cvs.style.width  = (cvs.width  * viewScale) + 'px';
-  cvs.style.height = (cvs.height * viewScale) + 'px';
+  cvs.style.width  = (cvs.width  * viewScale)+'px';
+  cvs.style.height = (cvs.height * viewScale)+'px';
 }
 
-// ── Render ────────────────────────────────────────────
+// ── Render editor ─────────────────────────────────────
 function renderEditor() {
   const tpl = curTpl;
   const cvs = document.getElementById('editor-canvas');
   const ctx = cvs.getContext('2d');
-  const S = LOGICAL_S;
-  const G = 3;
+  const S = LOGICAL_S, G = 3;
 
-  ctx.fillStyle = '#111';
+  ctx.fillStyle='#111';
   ctx.fillRect(0,0,cvs.width,cvs.height);
 
-  tpl.slots.forEach((slot, i) => {
-    const sx=slot.x*S, sy=slot.y*S, sw=slot.w*S, sh=slot.h*S;
+  // Pass 1: regular (background) slots
+  tpl.slots.forEach((sl, i) => {
+    if (isOv(sl)) return;
+    const sx=sl.x*S, sy=sl.y*S, sw=sl.w*S, sh=sl.h*S;
     const x0=sx+G, y0=sy+G, w0=sw-G*2, h0=sh-G*2;
-
     ctx.save();
     ctx.beginPath(); ctx.rect(x0,y0,w0,h0); ctx.clip();
-
-    const ph = slotPhotos[i];
-    if (ph && ph.img) {
-      drawPhoto(ctx, ph.img, sx, sy, sw, sh, ph.ox, ph.oy, ph.scale, G);
+    const ph=slotPhotos[i];
+    if (ph&&ph.img) {
+      drawPhotoClip(ctx, ph.img, sx, sy, sw, sh, ph.ox, ph.oy, ph.scale);
     } else {
-      ctx.fillStyle = '#1d1d1d'; ctx.fillRect(x0,y0,w0,h0);
-      const cx=sx+sw/2, cy=sy+sh/2, r=Math.min(sw,sh)*0.13;
-      ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2);
-      ctx.fillStyle = i===activeSlot ? '#555':'rgba(70,70,70,.85)'; ctx.fill();
-      ctx.fillStyle='#fff';
-      ctx.font=`bold ${r*1.5}px sans-serif`;
-      ctx.textAlign='center'; ctx.textBaseline='middle';
-      ctx.fillText('+',cx,cy);
+      ctx.fillStyle='#1d1d1d'; ctx.fillRect(x0,y0,w0,h0);
+      drawPlus(ctx, sx+sw/2, sy+sh/2, Math.min(sw,sh)*0.13, i===activeSlot);
     }
     ctx.restore();
-
     if (i===activeSlot) {
       ctx.strokeStyle='#0095f6'; ctx.lineWidth=3;
       ctx.strokeRect(x0+1.5,y0+1.5,w0-3,h0-3);
     }
   });
 
-  ctx.strokeStyle='rgba(255,255,255,.2)'; ctx.lineWidth=1;
+  // Slide dividers
+  ctx.strokeStyle='rgba(255,255,255,.18)'; ctx.lineWidth=1;
   for (let i=1; i<tpl.slides; i++) {
     ctx.beginPath(); ctx.moveTo(i*S,0); ctx.lineTo(i*S,S); ctx.stroke();
   }
+
+  // Pass 2: overlay slots (on top)
+  tpl.slots.forEach((sl, i) => {
+    if (!isOv(sl)) return;
+    drawOvSlot(ctx, sl, i, S);
+  });
 }
 
-function drawPhoto(ctx, img, slotX, slotY, slotW, slotH, ox, oy, scale, gap) {
-  const AR = img.naturalWidth / img.naturalHeight;
-  const sAR = slotW / slotH;
-  let dw, dh;
-  if (AR > sAR) { dh=slotH*scale; dw=dh*AR; }
-  else          { dw=slotW*scale; dh=dw/AR; }
-  const x = slotX+(slotW-dw)/2+ox;
-  const y = slotY+(slotH-dh)/2+oy;
-  ctx.drawImage(img,x,y,dw,dh);
+function drawPlus(ctx, cx, cy, r, active) {
+  ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2);
+  ctx.fillStyle = active ? '#555':'rgba(70,70,70,.85)'; ctx.fill();
+  ctx.fillStyle='#fff';
+  ctx.font=`bold ${r*1.5}px sans-serif`;
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText('+',cx,cy);
+}
+
+function drawPhotoClip(ctx, img, slotX, slotY, slotW, slotH, ox, oy, scale) {
+  const AR=img.naturalWidth/img.naturalHeight, sAR=slotW/slotH;
+  let dw,dh;
+  if(AR>sAR){dh=slotH*scale;dw=dh*AR;}else{dw=slotW*scale;dh=dw/AR;}
+  ctx.drawImage(img, slotX+(slotW-dw)/2+ox, slotY+(slotH-dh)/2+oy, dw, dh);
+}
+
+function drawOvSlot(ctx, sl, i, S) {
+  const cx=sl.cx*S, cy=sl.cy*S, w=sl.w*S, h=sl.h*S;
+  const rot=(sl.rot||0)*Math.PI/180;
+  const fw=(sl.frame||0)/100*Math.min(w,h);
+  const ph=slotPhotos[i];
+
+  ctx.save();
+  ctx.translate(cx,cy);
+  ctx.rotate(rot);
+
+  if (sl.shadow) {
+    ctx.shadowColor='rgba(0,0,0,.5)'; ctx.shadowBlur=14; ctx.shadowOffsetX=3; ctx.shadowOffsetY=4;
+  }
+  if (fw>0) {
+    ctx.fillStyle='#f0f0f0'; ctx.fillRect(-w/2,-h/2,w,h);
+    ctx.shadowColor='transparent'; ctx.shadowBlur=0;
+  }
+
+  const iw=w-fw*2, ih=h-fw*2;
+  ctx.save();
+  ctx.beginPath(); ctx.rect(-iw/2,-ih/2,iw,ih); ctx.clip();
+
+  if (ph&&ph.img) {
+    const img=ph.img;
+    const AR=img.naturalWidth/img.naturalHeight, sAR=iw/ih;
+    let dw,dh;
+    if(AR>sAR){dh=ih*ph.scale;dw=dh*AR;}else{dw=iw*ph.scale;dh=dw/AR;}
+    ctx.drawImage(img, -(dw/2)+ph.ox, -(dh/2)+ph.oy, dw, dh);
+  } else {
+    ctx.fillStyle='#2a2a2a'; ctx.fillRect(-iw/2,-ih/2,iw,ih);
+    drawPlus(ctx, 0, 0, Math.min(iw,ih)*0.13, i===activeSlot);
+  }
+  ctx.restore();
+
+  if (i===activeSlot) {
+    ctx.strokeStyle='#0095f6'; ctx.lineWidth=2.5;
+    ctx.strokeRect(-iw/2+1,-ih/2+1,iw-2,ih-2);
+  }
+  ctx.restore();
+}
+
+// ── Hit testing ───────────────────────────────────────
+function hitSlot(x, y) {
+  const S = LOGICAL_S;
+  // Overlay slots are on top → check in reverse order first
+  for (let i=curTpl.slots.length-1; i>=0; i--) {
+    const sl=curTpl.slots[i];
+    if (!isOv(sl)) continue;
+    const cx=sl.cx*S, cy=sl.cy*S, hw=sl.w*S/2, hh=sl.h*S/2;
+    const ang=-(sl.rot||0)*Math.PI/180;
+    const dx=x-cx, dy=y-cy;
+    const lx=dx*Math.cos(ang)-dy*Math.sin(ang);
+    const ly=dx*Math.sin(ang)+dy*Math.cos(ang);
+    if(Math.abs(lx)<=hw && Math.abs(ly)<=hh) return i;
+  }
+  // Regular slots
+  for (let i=0; i<curTpl.slots.length; i++) {
+    const sl=curTpl.slots[i];
+    if(isOv(sl)) continue;
+    if(x>=sl.x*S && x<(sl.x+sl.w)*S && y>=sl.y*S && y<(sl.y+sl.h)*S) return i;
+  }
+  return -1;
 }
 
 // ── Events ────────────────────────────────────────────
-let drag  = null;   // {x,y,ox,oy} or null
-let pinch = null;   // {mode:'photo'|'view', d0, s0|vs0}
-let tapInfo = null; // {si, x, y} for tap detection
+let drag=null, pinch=null, tapInfo=null;
 
 function bindEvents() {
   const cvs = document.getElementById('editor-canvas');
   const fi  = document.getElementById('file-input');
 
   fi.addEventListener('change', e => {
-    const f = e.target.files[0];
-    if (!f || activeSlot < 0) return;
-    const reader = new FileReader();
+    const f=e.target.files[0];
+    if(!f||activeSlot<0) return;
+    const reader=new FileReader();
     reader.onload = ev => {
-      const img = new Image();
+      const img=new Image();
       img.onload = () => {
-        slotPhotos[activeSlot] = {img, ox:0, oy:0, scale:1};
+        slotPhotos[activeSlot]={img,ox:0,oy:0,scale:1};
         renderEditor();
         showToast('照片已加入 · 拖曳移動 · 雙指縮放');
       };
       img.onerror = () => showToast('圖片載入失敗，請重試');
-      img.src = ev.target.result;
+      img.src=ev.target.result;
     };
     reader.readAsDataURL(f);
-    fi.value = '';
+    fi.value='';
   });
 
-  // ── Touch ──
   cvs.addEventListener('touchstart', e => {
     e.preventDefault();
-    drag = null; pinch = null; tapInfo = null;
-
-    if (e.touches.length === 1) {
-      const pt = getXY(cvs, e.touches[0]);
-      const si = hitSlot(pt.x, pt.y);
-      if (si < 0) return;
-
-      activeSlot = si;
-      renderEditor();
-      tapInfo = {si, x: pt.x, y: pt.y};
-
-      if (slotPhotos[si]) {
-        // slot with photo → prepare drag (starts on touchstart for responsiveness)
-        drag = {x:pt.x, y:pt.y, ox:slotPhotos[si].ox, oy:slotPhotos[si].oy};
-      }
-      // empty slot: wait for touchend to call fi.click() (iOS requires touchend for file picker)
-
-    } else if (e.touches.length === 2) {
-      tapInfo = null; drag = null;
-      const d0 = pDist(e.touches);
-      const hasPhoto = activeSlot >= 0 && slotPhotos[activeSlot];
-      if (hasPhoto) {
-        pinch = {mode:'photo', d0, s0: slotPhotos[activeSlot].scale};
-      } else {
-        pinch = {mode:'view', d0, vs0: viewScale};
-      }
+    drag=null; pinch=null; tapInfo=null;
+    if (e.touches.length===1) {
+      const pt=getXY(cvs,e.touches[0]);
+      const si=hitSlot(pt.x,pt.y);
+      if(si<0) return;
+      activeSlot=si; renderEditor();
+      tapInfo={si,x:pt.x,y:pt.y};
+      if(slotPhotos[si]) drag={x:pt.x,y:pt.y,ox:slotPhotos[si].ox,oy:slotPhotos[si].oy};
+    } else if (e.touches.length===2) {
+      tapInfo=null; drag=null;
+      const d0=pDist(e.touches);
+      const hasPhoto=activeSlot>=0&&slotPhotos[activeSlot];
+      pinch = hasPhoto ? {mode:'photo',d0,s0:slotPhotos[activeSlot].scale}
+                       : {mode:'view',d0,vs0:viewScale};
     }
-  }, {passive:false});
+  },{passive:false});
 
   cvs.addEventListener('touchmove', e => {
     e.preventDefault();
-    if (pinch && e.touches.length === 2) {
-      const d = pDist(e.touches);
-      if (pinch.mode === 'photo' && activeSlot >= 0 && slotPhotos[activeSlot]) {
-        slotPhotos[activeSlot].scale = Math.max(.3, Math.min(8, pinch.s0 * d/pinch.d0));
+    if(pinch&&e.touches.length===2) {
+      const d=pDist(e.touches);
+      if(pinch.mode==='photo'&&activeSlot>=0&&slotPhotos[activeSlot]) {
+        slotPhotos[activeSlot].scale=Math.max(.2,Math.min(8,pinch.s0*d/pinch.d0));
         renderEditor();
-      } else if (pinch.mode === 'view') {
-        viewScale = Math.max(.15, Math.min(3, pinch.vs0 * d/pinch.d0));
+      } else if(pinch.mode==='view') {
+        viewScale=Math.max(.15,Math.min(3,pinch.vs0*d/pinch.d0));
         applyViewScale();
       }
-    } else if (drag && e.touches.length === 1 && activeSlot >= 0 && slotPhotos[activeSlot]) {
-      const pt = getXY(cvs, e.touches[0]);
-      const dx = pt.x - tapInfo?.x, dy = pt.y - tapInfo?.y;
-      // If moved more than 6px, it's a drag → cancel tap
-      if (tapInfo && Math.sqrt(dx*dx+dy*dy) > 6) tapInfo = null;
-      slotPhotos[activeSlot].ox = drag.ox + (pt.x - drag.x);
-      slotPhotos[activeSlot].oy = drag.oy + (pt.y - drag.y);
+    } else if(drag&&e.touches.length===1&&activeSlot>=0&&slotPhotos[activeSlot]) {
+      const pt=getXY(cvs,e.touches[0]);
+      if(tapInfo) {
+        const dx=pt.x-tapInfo.x,dy=pt.y-tapInfo.y;
+        if(Math.sqrt(dx*dx+dy*dy)>6) tapInfo=null;
+      }
+      slotPhotos[activeSlot].ox=drag.ox+(pt.x-drag.x);
+      slotPhotos[activeSlot].oy=drag.oy+(pt.y-drag.y);
       renderEditor();
     }
-  }, {passive:false});
+  },{passive:false});
 
   cvs.addEventListener('touchend', e => {
-    if (e.touches.length < 2) pinch = null;
-    if (e.touches.length === 0) {
-      // Tap on empty slot → open file picker (must be in touchend for iOS)
-      if (tapInfo !== null && !slotPhotos[tapInfo.si]) {
-        fi.click();
-      }
-      drag = null;
-      tapInfo = null;
+    if(e.touches.length<2) pinch=null;
+    if(e.touches.length===0) {
+      if(tapInfo!==null&&!slotPhotos[tapInfo.si]) fi.click();
+      drag=null; tapInfo=null;
     }
   });
 
-  // ── Mouse (desktop) ──
   cvs.addEventListener('mousedown', e => {
-    const pt = getXY(cvs, e);
-    const si = hitSlot(pt.x, pt.y);
-    if (si < 0) return;
-    activeSlot = si; renderEditor();
-    if (!slotPhotos[si]) { fi.click(); }
-    else { drag = {x:pt.x, y:pt.y, ox:slotPhotos[si].ox, oy:slotPhotos[si].oy}; }
+    const pt=getXY(cvs,e);
+    const si=hitSlot(pt.x,pt.y);
+    if(si<0) return;
+    activeSlot=si; renderEditor();
+    if(!slotPhotos[si]) fi.click();
+    else drag={x:pt.x,y:pt.y,ox:slotPhotos[si].ox,oy:slotPhotos[si].oy};
   });
   cvs.addEventListener('mousemove', e => {
-    if (!drag || activeSlot < 0 || !slotPhotos[activeSlot]) return;
-    const pt = getXY(cvs, e);
-    slotPhotos[activeSlot].ox = drag.ox + (pt.x - drag.x);
-    slotPhotos[activeSlot].oy = drag.oy + (pt.y - drag.y);
+    if(!drag||activeSlot<0||!slotPhotos[activeSlot]) return;
+    const pt=getXY(cvs,e);
+    slotPhotos[activeSlot].ox=drag.ox+(pt.x-drag.x);
+    slotPhotos[activeSlot].oy=drag.oy+(pt.y-drag.y);
     renderEditor();
   });
-  cvs.addEventListener('mouseup', () => drag = null);
+  cvs.addEventListener('mouseup',()=>drag=null);
   cvs.addEventListener('wheel', e => {
     e.preventDefault();
-    const factor = e.deltaY > 0 ? .92 : 1.08;
-    if (e.ctrlKey || e.metaKey || !(activeSlot >= 0 && slotPhotos[activeSlot])) {
-      // zoom canvas view
-      viewScale = Math.max(.15, Math.min(3, viewScale * factor));
-      applyViewScale();
-    } else if (activeSlot >= 0 && slotPhotos[activeSlot]) {
-      slotPhotos[activeSlot].scale = Math.max(.3, Math.min(8, slotPhotos[activeSlot].scale * factor));
+    const f=e.deltaY>0?.92:1.08;
+    if(e.ctrlKey||e.metaKey||!(activeSlot>=0&&slotPhotos[activeSlot])) {
+      viewScale=Math.max(.15,Math.min(3,viewScale*f)); applyViewScale();
+    } else {
+      slotPhotos[activeSlot].scale=Math.max(.2,Math.min(8,slotPhotos[activeSlot].scale*f));
       renderEditor();
     }
-  }, {passive:false});
+  },{passive:false});
 }
 
-function getXY(cvs, e) {
-  const r = cvs.getBoundingClientRect();
-  const sc = cvs.width / r.width; // accounts for viewScale
-  return { x:(e.clientX-r.left)*sc, y:(e.clientY-r.top)*sc };
+function getXY(cvs,e) {
+  const r=cvs.getBoundingClientRect(), sc=cvs.width/r.width;
+  return {x:(e.clientX-r.left)*sc, y:(e.clientY-r.top)*sc};
 }
-function hitSlot(x, y) {
-  const S = LOGICAL_S;
-  return curTpl.slots.findIndex(sl =>
-    x >= sl.x*S && x < (sl.x+sl.w)*S && y >= sl.y*S && y < (sl.y+sl.h)*S
-  );
-}
-function pDist(touches) {
-  const dx=touches[0].clientX-touches[1].clientX, dy=touches[0].clientY-touches[1].clientY;
+function pDist(t) {
+  const dx=t[0].clientX-t[1].clientX, dy=t[0].clientY-t[1].clientY;
   return Math.sqrt(dx*dx+dy*dy);
 }
 
 // ── Export ────────────────────────────────────────────
 async function saveAll() {
-  const tpl = curTpl;
-  if (!slotPhotos.some(p => p && p.img)) { showToast('請先加入至少一張照片'); return; }
-
+  const tpl=curTpl;
+  if(!slotPhotos.some(p=>p&&p.img)){showToast('請先加入至少一張照片');return;}
   showToast(`正在產生 ${tpl.slides} 張圖片...`);
 
-  const EP = EXPORT_PX;
-  const scaleRatio = EP / LOGICAL_S;
-  const container = document.getElementById('export-imgs');
-  container.innerHTML = '';
+  const EP=EXPORT_PX, ratio=EP/LOGICAL_S;
+  const container=document.getElementById('export-imgs');
+  container.innerHTML='';
 
-  for (let si = 0; si < tpl.slides; si++) {
-    const off = document.createElement('canvas');
-    off.width = off.height = EP;
-    const ctx = off.getContext('2d');
-    ctx.fillStyle = '#111'; ctx.fillRect(0,0,EP,EP);
+  for(let si=0;si<tpl.slides;si++){
+    const off=document.createElement('canvas');
+    off.width=off.height=EP;
+    const ctx=off.getContext('2d');
+    ctx.fillStyle='#111'; ctx.fillRect(0,0,EP,EP);
 
-    tpl.slots.forEach((slot, i) => {
-      const slotX=slot.x*EP, slotY=slot.y*EP, slotW=slot.w*EP, slotH=slot.h*EP;
-      const slideL=si*EP, slideR=slideL+EP;
-      const oL=Math.max(slotX,slideL), oR=Math.min(slotX+slotW,slideR);
-      if (oL >= oR) return;
-
-      const clipX=oL-slideL, clipW=oR-oL, clipY=slotY, clipH=slotH;
+    // Pass 1: regular slots
+    tpl.slots.forEach((sl,i)=>{
+      if(isOv(sl)) return;
+      const slotX=sl.x*EP, slotY=sl.y*EP, slotW=sl.w*EP, slotH=sl.h*EP;
+      const slideL=si*EP;
+      const oL=Math.max(slotX,slideL), oR=Math.min(slotX+slotW,slideL+EP);
+      if(oL>=oR) return;
+      const clipX=oL-slideL, clipW=oR-oL;
       ctx.save();
-      ctx.beginPath(); ctx.rect(clipX,clipY,clipW,clipH); ctx.clip();
-
-      const ph = slotPhotos[i];
-      if (ph && ph.img) {
+      ctx.beginPath(); ctx.rect(clipX,slotY,clipW,slotH); ctx.clip();
+      const ph=slotPhotos[i];
+      if(ph&&ph.img){
         const img=ph.img;
         const AR=img.naturalWidth/img.naturalHeight, sAR=slotW/slotH;
         let dw,dh;
-        if(AR>sAR){dh=slotH*ph.scale;dw=dh*AR;}
-        else{dw=slotW*ph.scale;dh=dw/AR;}
-        const ox=ph.ox*scaleRatio, oy=ph.oy*scaleRatio;
-        const x=slotX-slideL+(slotW-dw)/2+ox;
-        const y=slotY+(slotH-dh)/2+oy;
-        ctx.drawImage(img,x,y,dw,dh);
+        if(AR>sAR){dh=slotH*ph.scale;dw=dh*AR;}else{dw=slotW*ph.scale;dh=dw/AR;}
+        const ox=ph.ox*ratio, oy=ph.oy*ratio;
+        ctx.drawImage(img, slotX-slideL+(slotW-dw)/2+ox, slotY+(slotH-dh)/2+oy, dw, dh);
       } else {
-        ctx.fillStyle='#1d1d1d'; ctx.fillRect(clipX,clipY,clipW,clipH);
+        ctx.fillStyle='#1d1d1d'; ctx.fillRect(clipX,slotY,clipW,slotH);
       }
       ctx.restore();
     });
 
-    // Add to overlay
-    const item = document.createElement('div');
-    item.className = 'export-item';
-    const imgEl = document.createElement('img');
-    imgEl.src = off.toDataURL('image/png');
-    imgEl.alt = `第 ${si+1} 格`;
-    const label = document.createElement('div');
-    label.className = 'export-label';
-    label.textContent = `第 ${si+1} 格（共 ${tpl.slides} 格）`;
-    item.appendChild(imgEl);
-    item.appendChild(label);
+    // Pass 2: overlay slots
+    tpl.slots.forEach((sl,i)=>{
+      if(!isOv(sl)) return;
+      const cx=(sl.cx-si)*EP, cy=sl.cy*EP;
+      const w=sl.w*EP, h=sl.h*EP;
+      const rot=(sl.rot||0)*Math.PI/180;
+      const fw=(sl.frame||0)/100*Math.min(w,h);
+      const ph=slotPhotos[i];
+
+      ctx.save();
+      ctx.translate(cx,cy); ctx.rotate(rot);
+
+      if(sl.shadow){
+        ctx.shadowColor='rgba(0,0,0,.45)'; ctx.shadowBlur=28; ctx.shadowOffsetX=6; ctx.shadowOffsetY=8;
+      }
+      if(fw>0){
+        ctx.fillStyle='#f0f0f0'; ctx.fillRect(-w/2,-h/2,w,h);
+        ctx.shadowColor='transparent'; ctx.shadowBlur=0;
+      }
+      const iw=w-fw*2, ih=h-fw*2;
+      ctx.save();
+      ctx.beginPath(); ctx.rect(-iw/2,-ih/2,iw,ih); ctx.clip();
+      if(ph&&ph.img){
+        const img=ph.img;
+        const AR=img.naturalWidth/img.naturalHeight, sAR=iw/ih;
+        let dw,dh;
+        if(AR>sAR){dh=ih*ph.scale;dw=dh*AR;}else{dw=iw*ph.scale;dh=dw/AR;}
+        const ox=ph.ox*ratio, oy=ph.oy*ratio;
+        ctx.drawImage(img, -(dw/2)+ox, -(dh/2)+oy, dw, dh);
+      } else {
+        ctx.fillStyle='#2a2a2a'; ctx.fillRect(-iw/2,-ih/2,iw,ih);
+      }
+      ctx.restore(); ctx.restore();
+    });
+
+    const item=document.createElement('div');
+    item.className='export-item';
+    const imgEl=document.createElement('img');
+    imgEl.src=off.toDataURL('image/png');
+    imgEl.alt=`第 ${si+1} 格`;
+    const label=document.createElement('div');
+    label.className='export-label';
+    label.textContent=`第 ${si+1} 格（共 ${tpl.slides} 格）`;
+    item.appendChild(imgEl); item.appendChild(label);
     container.appendChild(item);
   }
-
   document.getElementById('export-overlay').classList.add('show');
 }
 
-function closeExport() {
+function closeExport(){
   document.getElementById('export-overlay').classList.remove('show');
 }
 
 // ── Toast ─────────────────────────────────────────────
 let toastT;
-function showToast(msg) {
-  const el = document.getElementById('toast');
-  el.textContent = msg; el.classList.add('show');
-  clearTimeout(toastT);
-  toastT = setTimeout(() => el.classList.remove('show'), 3000);
+function showToast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.classList.add('show');
+  clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove('show'),3000);
 }
 
-// ── Init ──────────────────────────────────────────────
 buildGallery();
 goTo('gallery');
 </script>
