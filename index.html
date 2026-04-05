@@ -18,13 +18,13 @@
     .hbtn.lg{ font-size:24px; }
     .hbtn.blue{ color:var(--blue); font-weight:600; }
 
-    #tpl-grid{ flex:1; overflow-y:auto; display:grid; grid-template-columns:1fr 1fr; gap:2px; background:var(--border); }
-    .cat-hdr{ grid-column:1/-1; background:#000; padding:18px 16px 8px; font-size:10px; font-weight:600; color:#3a3a3a; letter-spacing:.14em; text-transform:uppercase; }
-    .tcard{ background:var(--s1); cursor:pointer; position:relative; overflow:hidden; }
-    .tcard:active{ opacity:.75; }
-    .tcard canvas{ display:block; width:100%; height:auto; }
-    .tcard-info{ position:absolute; bottom:0; left:0; right:0; padding:28px 10px 10px; background:linear-gradient(transparent,rgba(0,0,0,.8)); display:flex; align-items:flex-end; justify-content:space-between; pointer-events:none; }
-    .tcard-name{ font-size:12px; font-weight:500; color:rgba(255,255,255,.9); letter-spacing:0; }
+    #tpl-grid{ flex:1; overflow-y:auto; display:grid; grid-template-columns:1fr; gap:1px; background:#000; }
+    .cat-hdr{ background:#000; padding:22px 16px 8px; font-size:10px; font-weight:600; color:#444; letter-spacing:.14em; text-transform:uppercase; }
+    .tcard{ background:#111; cursor:pointer; position:relative; overflow:hidden; }
+    .tcard:active{ opacity:.8; }
+    .tcard img{ display:block; height:110px; width:auto; pointer-events:none; }
+    .tcard-info{ position:absolute; bottom:0; left:0; right:0; padding:32px 14px 12px; background:linear-gradient(transparent,rgba(0,0,0,.85)); display:flex; align-items:flex-end; justify-content:space-between; pointer-events:none; }
+    .tcard-name{ font-size:13px; font-weight:500; color:rgba(255,255,255,.92); }
     .tcard-meta{ font-size:11px; color:rgba(255,255,255,.38); }
 
     #editor-scroll{ flex:1; overflow:auto; background:#111; -webkit-overflow-scrolling:touch; display:flex; align-items:center; justify-content:flex-start; padding:16px; }
@@ -41,9 +41,12 @@
     .export-item img{ width:100%; display:block; border-radius:6px; }
     .export-label{ font-size:12px; color:#555; text-align:center; margin-top:6px; }
 
-    #zoom-ctrl{ position:absolute; right:14px; bottom:14px; display:none; flex-direction:column; gap:6px; z-index:50; }
+    #zoom-ctrl{ position:absolute; right:14px; bottom:82px; display:none; flex-direction:column; gap:6px; z-index:50; }
     #zoom-ctrl.show{ display:flex; }
     .zbtn{ width:42px; height:42px; border-radius:50%; background:rgba(18,18,18,.9); border:1px solid rgba(255,255,255,.14); color:#fff; font-size:22px; line-height:1; display:flex; align-items:center; justify-content:center; cursor:pointer; -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); }
+    #editor-bottom{ flex-shrink:0; padding:10px 20px; padding-bottom:max(14px,env(safe-area-inset-bottom)); background:#000; display:none; }
+    #editor-bottom.show{ display:block; }
+    #save-btn{ width:100%; height:50px; border-radius:25px; background:#fff; border:none; color:#000; font-size:16px; font-weight:600; cursor:pointer; }
     #update-btn{ position:fixed; display:none; flex-direction:column; gap:8px; z-index:150; transform:translate(-50%,-50%); align-items:center; pointer-events:none; }
     #update-btn.show{ display:flex; pointer-events:auto; }
     #update-btn button{ background:rgba(10,10,10,.88); border:1px solid rgba(255,255,255,.18); color:#fff; padding:11px 24px; border-radius:24px; font-size:14px; font-weight:500; cursor:pointer; min-height:44px; white-space:nowrap; -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px); }
@@ -68,7 +71,7 @@
   <div class="hdr">
     <button class="hbtn lg" onclick="goBack()">‹</button>
     <h1 id="editor-title">編輯</h1>
-    <button class="hbtn blue" onclick="saveAll()">儲存</button>
+    <div style="min-width:44px"></div>
   </div>
   <div id="editor-scroll">
     <canvas id="editor-canvas"></canvas>
@@ -76,6 +79,9 @@
   <div id="zoom-ctrl">
     <button class="zbtn" ontouchend="event.preventDefault();zoomEditor(1)" onclick="zoomEditor(1)">+</button>
     <button class="zbtn" ontouchend="event.preventDefault();zoomEditor(-1)" onclick="zoomEditor(-1)">−</button>
+  </div>
+  <div id="editor-bottom">
+    <button id="save-btn" onclick="saveAll()">儲存</button>
   </div>
 </div>
 
@@ -278,15 +284,16 @@ function goTo(id) {
     if (i < toIdx) el.classList.add('off-left');
   });
 }
-function goBack() { hideUpdateBtn(); document.getElementById('zoom-ctrl').classList.remove('show'); goTo('gallery'); }
+function goBack() { hideUpdateBtn(); document.getElementById('zoom-ctrl').classList.remove('show'); document.getElementById('editor-bottom').classList.remove('show'); goTo('gallery'); }
 
 // ── Slot helpers ──────────────────────────────────────
 function isOv(sl) { return !!sl.ov; }
 
 // ── Gallery ───────────────────────────────────────────
+const PREVIEW_H = 110; // px — fixed tile height for gallery cards
+
 function buildGallery() {
   const grid = document.getElementById('tpl-grid');
-  const cardW = Math.floor((window.innerWidth - 4) / 2);
   let lastCat = null;
 
   TPLS.forEach(tpl => {
@@ -302,16 +309,17 @@ function buildGallery() {
     card.className = 'tcard';
     card.onclick = () => startEditor(tpl);
 
-    const cvs = document.createElement('canvas');
-    cvs.style.width = '100%';
-    cvs.style.height = 'auto';
-    const tileW = Math.min(Math.floor(cardW / tpl.slides), cardW);
-    drawLayout(cvs, tpl, tileW, true);
-    card.appendChild(cvs);
+    // Draw at fixed tile height — convert to img immediately to avoid iOS canvas memory limits
+    const tempCvs = document.createElement('canvas');
+    drawLayout(tempCvs, tpl, PREVIEW_H, true);
+    const img = new Image();
+    img.src = tempCvs.toDataURL('image/jpeg', 0.88);
+    img.style.cssText = `display:block;height:${PREVIEW_H}px;width:auto;pointer-events:none;`;
+    card.appendChild(img);
 
     const info = document.createElement('div');
     info.className = 'tcard-info';
-    info.innerHTML = `<span class="tcard-name">${tpl.name}</span><span class="tcard-meta">${tpl.photos} 張</span>`;
+    info.innerHTML = `<span class="tcard-name">${tpl.name}</span><span class="tcard-meta">${tpl.slides} 格 · ${tpl.photos} 張</span>`;
     card.appendChild(info);
     grid.appendChild(card);
   });
@@ -325,9 +333,18 @@ function drawLayout(canvas, tpl, tileSize, gradient) {
   ctx.fillStyle = tpl.bg || '#000';
   ctx.fillRect(0,0,W,H);
 
-  const gap = Math.max(2, tileSize * 0.018);
-  // Distinct warm/cool tones per slot so layout structure is clear at a glance
-  const PREV_FILLS = ['#2e2926','#20252e','#252e20','#2b2028','#202b2b','#2e2b20','#28202e','#202828'];
+  const gap = Math.max(2, tileSize * 0.016);
+  // Photo-mood gradients: each slot looks like a real photo in different lighting
+  const PHOTO_MOODS = [
+    ['#c4956a','#7a5030'],  // warm portrait / skin
+    ['#6a90b4','#38607a'],  // cool sky / ocean
+    ['#8aaa78','#506840'],  // nature green
+    ['#b89060','#7a5830'],  // golden hour
+    ['#7a9aaa','#486070'],  // misty / morning
+    ['#b07858','#704838'],  // terracotta
+    ['#88a890','#506858'],  // sage / forest
+    ['#a08888','#685858'],  // neutral warm
+  ];
 
   // Pass 1: regular (background) slots
   let slotIdx = 0;
@@ -335,8 +352,11 @@ function drawLayout(canvas, tpl, tileSize, gradient) {
     if (isOv(sl)) return;
     const sx=sl.x*tileSize, sy=sl.y*tileSize, sw=sl.w*tileSize, sh=sl.h*tileSize;
     const x0=sx+gap, y0=sy+gap, w0=sw-gap*2, h0=sh-gap*2;
-    ctx.fillStyle = PREV_FILLS[slotIdx % PREV_FILLS.length];
+    const mood = PHOTO_MOODS[slotIdx % PHOTO_MOODS.length];
     slotIdx++;
+    const g = ctx.createLinearGradient(x0, y0, x0+w0, y0+h0);
+    g.addColorStop(0, mood[0]); g.addColorStop(1, mood[1]);
+    ctx.fillStyle = g;
     ctx.fillRect(x0,y0,w0,h0);
   });
 
@@ -382,8 +402,10 @@ function drawOvPreview(ctx, sl, tileSize) {
     ctx.shadowColor='transparent'; ctx.shadowBlur=0;
   }
   const iw=w-fw*2, ih=h-fw*2;
-  // Warm gray photo placeholder — looks like an unprinted Polaroid
-  ctx.fillStyle = '#b8b4b0';
+  // Warm gradient for overlay photo placeholder
+  const og = ctx.createLinearGradient(-iw/2,-ih/2,iw/2,ih/2);
+  og.addColorStop(0,'#c49070'); og.addColorStop(1,'#886048');
+  ctx.fillStyle = og;
   ctx.fillRect(-iw/2,-ih/2,iw,ih);
   ctx.restore();
 }
@@ -414,6 +436,7 @@ function startEditor(tpl) {
   renderEditor();
   if (!evBound) { bindEvents(); evBound = true; }
   document.getElementById('zoom-ctrl').classList.add('show');
+  document.getElementById('editor-bottom').classList.add('show');
   goTo('editor');
   showToast('點格子 + 新增照片 · 右下角 +/− 縮放');
 }
