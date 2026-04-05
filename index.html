@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
   <title>輪播製作工具</title>
   <style>
     :root { --bg:#000; --s1:#111; --border:#2a2a2a; --accent:#fff; --blue:#0095f6; }
@@ -317,24 +319,35 @@ function buildGallery() {
     const tileW = Math.min(Math.floor(screenW / prevSlides), MAX_TILE);
 
     // Draw full template, then crop to prevSlides width if template has more
-    const tempCvs = document.createElement('canvas');
-    drawLayout(tempCvs, tpl, tileW, true);
-    let srcCvs = tempCvs;
-    if (tpl.slides > MAX_PREV) {
-      const cw = prevSlides * tileW;
-      srcCvs = document.createElement('canvas');
-      srcCvs.width = cw; srcCvs.height = tileW;
-      srcCvs.getContext('2d').drawImage(tempCvs, 0, 0);
+    // Wrap in try-catch: one failed canvas must not break all subsequent cards
+    let dataURL = '', iw = tileW, ih = tileW;
+    try {
+      const tempCvs = document.createElement('canvas');
+      drawLayout(tempCvs, tpl, tileW, true);
+      let srcCvs = tempCvs;
+      if (tpl.slides > MAX_PREV) {
+        const cw = prevSlides * tileW;
+        srcCvs = document.createElement('canvas');
+        srcCvs.width = cw; srcCvs.height = tileW;
+        const cx2 = srcCvs.getContext('2d');
+        if (cx2) cx2.drawImage(tempCvs, 0, 0);
+      }
+      iw = srcCvs.width; ih = srcCvs.height;
+      dataURL = srcCvs.toDataURL('image/jpeg', 0.88);
+      // FREE canvas backing store immediately — iOS has strict canvas memory limits
+      // (~16 canvases max). Without this, canvases 17+ fail silently → onclick never set
+      srcCvs.width = srcCvs.height = 0;
+      tempCvs.width = tempCvs.height = 0;
+    } catch(e) {
+      console.warn('preview render failed', tpl.id, e);
     }
 
-    // Convert to img — avoids iOS canvas memory limit that silently breaks later cards
-    // Use explicit width/height attrs + aspect-ratio so iOS Safari computes height correctly
-    const iw = srcCvs.width, ih = srcCvs.height;
+    // Explicit px height — more reliable than aspect-ratio on older iOS Safari
+    const cardW = window.innerWidth;
+    const dispH = ih > 0 ? Math.round(cardW * ih / iw) : 120;
     const img = new Image();
-    img.setAttribute('width', iw);
-    img.setAttribute('height', ih);
-    img.src = srcCvs.toDataURL('image/jpeg', 0.88);
-    img.style.cssText = `display:block;width:100%;aspect-ratio:${iw}/${ih};pointer-events:none;`;
+    if (dataURL) img.src = dataURL;
+    img.style.cssText = `display:block;width:${cardW}px;height:${dispH}px;pointer-events:none;`;
     card.appendChild(img);
 
     const moreLabel = tpl.slides > MAX_PREV ? `+${tpl.slides - MAX_PREV} ` : '';
