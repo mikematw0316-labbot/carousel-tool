@@ -197,8 +197,12 @@ const TPLS = [
     ] },
 ];
 
-const SLOT_COLORS = ['#1a2535','#251a35','#1a3525','#352520','#25351a','#201a35','#35251a','#352530'];
-const CAT_LABELS  = { basic:'基本版型', collage:'✦ 拼貼版型', overlay:'◈ 圖中圖' };
+// Preview slot colours — muted tones that look good in gallery
+const SLOT_COLORS  = ['#4a5260','#60504a','#4a604e','#564a60','#604e4a','#4a5660','#604a50','#504a60'];
+// Overlay preview uses warm neutral grays (like real photo paper)
+const OV_BG_COLOR  = '#a8a4a0';  // warm gray for photo slots in overlay templates
+const OV_FRM_COLOR = '#ffffff';  // pure white Polaroid frame
+const CAT_LABELS   = { basic:'基本版型', collage:'✦ 拼貼版型', overlay:'◈ 圖中圖' };
 
 // ── State ─────────────────────────────────────────────
 let curTpl = null;
@@ -274,7 +278,10 @@ function drawLayout(canvas, tpl, tileSize, gradient) {
     if (isOv(sl)) return;
     const sx=sl.x*tileSize, sy=sl.y*tileSize, sw=sl.w*tileSize, sh=sl.h*tileSize;
     const x0=sx+gap, y0=sy+gap, w0=sw-gap*2, h0=sh-gap*2;
-    if (gradient) {
+    if (tpl.cat === 'overlay') {
+      // Warm neutral gray — looks like a real photo placeholder
+      ctx.fillStyle = OV_BG_COLOR;
+    } else if (gradient) {
       const g = ctx.createLinearGradient(x0,y0,x0+w0,y0+h0);
       g.addColorStop(0, SLOT_COLORS[i*2 % SLOT_COLORS.length]);
       g.addColorStop(1, SLOT_COLORS[(i*2+1) % SLOT_COLORS.length]);
@@ -283,8 +290,18 @@ function drawLayout(canvas, tpl, tileSize, gradient) {
     ctx.fillRect(x0,y0,w0,h0);
   });
 
+  // Subtle vignette for cream/paper backgrounds
+  if (tpl.bg) {
+    const rg = ctx.createRadialGradient(W/2,H/2,0, W/2,H/2,Math.max(W,H)*0.65);
+    rg.addColorStop(0,'rgba(0,0,0,0)');
+    rg.addColorStop(1,'rgba(0,0,0,0.08)');
+    ctx.fillStyle = rg;
+    ctx.fillRect(0,0,W,H);
+  }
+
   // Slide dividers
-  ctx.strokeStyle='rgba(255,255,255,.1)'; ctx.lineWidth=1;
+  const dividerColor = tpl.bg ? 'rgba(0,0,0,.12)' : 'rgba(255,255,255,.1)';
+  ctx.strokeStyle = dividerColor; ctx.lineWidth=1;
   for (let i=1; i<tpl.slides; i++) {
     ctx.beginPath(); ctx.moveTo(i*tileSize,0); ctx.lineTo(i*tileSize,H); ctx.stroke();
   }
@@ -292,11 +309,11 @@ function drawLayout(canvas, tpl, tileSize, gradient) {
   // Pass 2: overlay slots
   tpl.slots.forEach((sl, i) => {
     if (!isOv(sl)) return;
-    drawOvPreview(ctx, sl, i, tileSize, gradient);
+    drawOvPreview(ctx, sl, tileSize);
   });
 }
 
-function drawOvPreview(ctx, sl, i, tileSize, gradient) {
+function drawOvPreview(ctx, sl, tileSize) {
   const cx=sl.cx*tileSize, cy=sl.cy*tileSize;
   const w=sl.w*tileSize, h=sl.h*tileSize;
   const rot=(sl.rot||0)*Math.PI/180;
@@ -307,19 +324,16 @@ function drawOvPreview(ctx, sl, i, tileSize, gradient) {
   ctx.rotate(rot);
 
   if (sl.shadow) {
-    ctx.shadowColor='rgba(0,0,0,.55)'; ctx.shadowBlur=6; ctx.shadowOffsetX=2; ctx.shadowOffsetY=2;
+    ctx.shadowColor='rgba(0,0,0,.4)'; ctx.shadowBlur=8; ctx.shadowOffsetX=2; ctx.shadowOffsetY=3;
   }
   if (fw>0) {
-    ctx.fillStyle='#e8e8e8'; ctx.fillRect(-w/2,-h/2,w,h);
+    ctx.fillStyle = OV_FRM_COLOR;  // pure white Polaroid frame
+    ctx.fillRect(-w/2,-h/2,w,h);
     ctx.shadowColor='transparent'; ctx.shadowBlur=0;
   }
   const iw=w-fw*2, ih=h-fw*2;
-  if (gradient) {
-    const g = ctx.createLinearGradient(-iw/2,-ih/2,iw/2,ih/2);
-    g.addColorStop(0, SLOT_COLORS[i*2 % SLOT_COLORS.length]);
-    g.addColorStop(1, SLOT_COLORS[(i*2+1) % SLOT_COLORS.length]);
-    ctx.fillStyle = g;
-  } else { ctx.fillStyle='#333'; }
+  // Warm gray photo placeholder — looks like an unprinted Polaroid
+  ctx.fillStyle = '#b8b4b0';
   ctx.fillRect(-iw/2,-ih/2,iw,ih);
   ctx.restore();
 }
@@ -343,6 +357,9 @@ function startEditor(tpl) {
   viewScale = Math.min(1, (availW-32)/cvs.width, (availH-32)/cvs.height);
   applyViewScale();
 
+  // Editor scroll bg matches template mood
+  document.getElementById('editor-scroll').style.background = tpl.bg ? '#1e1a16' : '#111';
+
   renderEditor();
   if (!evBound) { bindEvents(); evBound = true; }
   goTo('editor');
@@ -362,8 +379,17 @@ function renderEditor() {
   const ctx = cvs.getContext('2d');
   const S = LOGICAL_S, G = 3;
 
+  const isLightBg = !!tpl.bg;
   ctx.fillStyle = tpl.bg || '#111';
   ctx.fillRect(0,0,cvs.width,cvs.height);
+
+  // Subtle vignette for cream/paper bg in editor
+  if (isLightBg) {
+    const rg = ctx.createRadialGradient(cvs.width/2,S/2,0, cvs.width/2,S/2,Math.max(cvs.width,S)*0.65);
+    rg.addColorStop(0,'rgba(0,0,0,0)');
+    rg.addColorStop(1,'rgba(0,0,0,0.07)');
+    ctx.fillStyle=rg; ctx.fillRect(0,0,cvs.width,S);
+  }
 
   // Pass 1: regular (background) slots
   tpl.slots.forEach((sl, i) => {
@@ -395,7 +421,7 @@ function renderEditor() {
   // Pass 2: overlay slots (on top)
   tpl.slots.forEach((sl, i) => {
     if (!isOv(sl)) return;
-    drawOvSlot(ctx, sl, i, S);
+    drawOvSlot(ctx, sl, i, S, isLightBg);
   });
 }
 
@@ -416,7 +442,7 @@ function drawPhotoClip(ctx, img, slotX, slotY, slotW, slotH, ox, oy, scale) {
   ctx.drawImage(img, slotX+(slotW-dw)/2+ox, slotY+(slotH-dh)/2+oy, dw, dh);
 }
 
-function drawOvSlot(ctx, sl, i, S) {
+function drawOvSlot(ctx, sl, i, S, lightBg=false) {
   const cx=sl.cx*S, cy=sl.cy*S, w=sl.w*S, h=sl.h*S;
   const rot=(sl.rot||0)*Math.PI/180;
   const fw=(sl.frame||0)/100*Math.min(w,h);
@@ -445,7 +471,9 @@ function drawOvSlot(ctx, sl, i, S) {
     if(AR>sAR){dh=ih*ph.scale;dw=dh*AR;}else{dw=iw*ph.scale;dh=dw/AR;}
     ctx.drawImage(img, -(dw/2)+ph.ox, -(dh/2)+ph.oy, dw, dh);
   } else {
-    ctx.fillStyle='#2a2a2a'; ctx.fillRect(-iw/2,-ih/2,iw,ih);
+    // Empty overlay slot: warm gray on light bg, dark gray on dark bg
+    ctx.fillStyle = isLightBg ? '#c8c3be' : '#2a2a2a';
+    ctx.fillRect(-iw/2,-ih/2,iw,ih);
     drawPlus(ctx, 0, 0, Math.min(iw,ih)*0.13, i===activeSlot);
   }
   ctx.restore();
