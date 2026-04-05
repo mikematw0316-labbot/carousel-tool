@@ -2,570 +2,534 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>無縫輪播製作工具</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>輪播製作工具</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: -apple-system, 'Microsoft JhengHei', 'PingFang TC', sans-serif;
-      background: #f0f2f5;
-      color: #1c1e21;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
+    :root { --bg:#000; --s1:#111; --s2:#1c1c1c; --border:#2a2a2a; --accent:#fff; --blue:#0095f6; }
+    *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+    body{ background:var(--bg); color:var(--accent); font-family:-apple-system,'PingFang TC','Microsoft JhengHei',sans-serif; height:100vh; overflow:hidden; }
+    .page{ position:fixed; inset:0; display:flex; flex-direction:column; background:var(--bg); transition:transform .25s; }
+    .page.off-right{ transform:translateX(100%); }
+    .page.off-left{ transform:translateX(-30%); opacity:.5; pointer-events:none; }
 
-    /* ── Header ── */
-    #header {
-      background: #1877f2;
-      color: white;
-      padding: 10px 20px;
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      flex-shrink: 0;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-    }
-    #header h1 { font-size: 15px; font-weight: 700; flex: 1; letter-spacing: 0.3px; }
+    /* Header */
+    .hdr{ display:flex; align-items:center; padding:12px 16px; border-bottom:1px solid var(--border); flex-shrink:0; min-height:52px; }
+    .hdr h1{ font-size:16px; font-weight:600; flex:1; text-align:center; }
+    .hbtn{ background:none; border:none; color:var(--accent); cursor:pointer; font-size:15px; padding:6px; min-width:44px; min-height:44px; display:flex; align-items:center; justify-content:center; }
+    .hbtn.lg{ font-size:24px; }
+    .hbtn.blue{ color:var(--blue); font-weight:600; }
 
-    .slide-counter {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      background: rgba(255,255,255,0.15);
-      padding: 5px 12px;
-      border-radius: 20px;
-    }
-    .slide-counter label { font-size: 12px; opacity: 0.85; }
-    .count-btn {
-      background: rgba(255,255,255,0.2);
-      border: none;
-      color: white;
-      width: 26px;
-      height: 26px;
-      border-radius: 50%;
-      cursor: pointer;
-      font-size: 18px;
-      line-height: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: background 0.15s;
-    }
-    .count-btn:hover { background: rgba(255,255,255,0.35); }
-    #slide-num { font-size: 20px; font-weight: 700; min-width: 28px; text-align: center; }
+    /* Gallery */
+    #tpl-grid{ flex:1; overflow-y:auto; display:grid; grid-template-columns:1fr 1fr; gap:2px; background:var(--border); }
+    .tcard{ background:var(--s1); cursor:pointer; active-transform:scale(.97); }
+    .tcard canvas{ display:block; width:100%; height:auto; }
+    .tcard-info{ padding:8px 10px 12px; }
+    .tcard-info strong{ display:block; font-size:13px; margin-bottom:3px; }
+    .tcard-info span{ font-size:11px; color:#666; }
 
-    #btn-export {
-      background: white;
-      color: #1877f2;
-      border: none;
-      padding: 8px 20px;
-      border-radius: 8px;
-      font-weight: 700;
-      font-size: 13px;
-      cursor: pointer;
-      transition: background 0.15s;
-    }
-    #btn-export:hover { background: #e7f0ff; }
+    /* Detail */
+    #detail-scroll{ flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+    #detail-cvs-wrap{ background:#0a0a0a; padding:24px 16px; display:flex; flex-direction:column; align-items:center; gap:10px; }
+    #detail-cvs-scroll{ overflow-x:auto; -webkit-overflow-scrolling:touch; }
+    #detail-dots{ display:flex; gap:5px; }
+    .dot{ width:6px; height:6px; border-radius:50%; background:#333; }
+    .dot.on{ background:#fff; }
+    #detail-meta{ padding:16px; border-bottom:1px solid var(--border); }
+    #detail-meta h2{ font-size:16px; margin-bottom:4px; }
+    #detail-meta p{ font-size:13px; color:#666; }
+    #detail-btns{ display:flex; justify-content:flex-end; gap:16px; padding:14px 16px; border-bottom:1px solid var(--border); }
+    #detail-btns button{ background:none; border:none; font-size:22px; color:#555; cursor:pointer; padding:4px; }
+    #btn-use{ margin:16px; padding:16px; background:#fff; color:#000; border:none; border-radius:12px; font-size:16px; font-weight:600; cursor:pointer; display:block; width:calc(100% - 32px); }
+    #btn-use:active{ background:#ddd; }
 
-    /* ── Toolbar ── */
-    #toolbar {
-      background: white;
-      padding: 8px 20px;
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      border-bottom: 1px solid #dde1e7;
-      flex-shrink: 0;
-      flex-wrap: wrap;
-    }
-    .tool-btn {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      padding: 7px 14px;
-      border: 1px solid #dde1e7;
-      background: white;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 13px;
-      color: #1c1e21;
-      transition: all 0.15s;
-    }
-    .tool-btn:hover { background: #f0f2f5; border-color: #c4c8d0; }
-    .tool-btn.blue { background: #1877f2; color: white; border-color: #1877f2; }
-    .tool-btn.blue:hover { background: #166fe5; }
-    .tool-btn.soon { opacity: 0.55; cursor: default; }
-    .badge {
-      font-size: 10px;
-      background: #e4e6eb;
-      color: #606770;
-      padding: 1px 6px;
-      border-radius: 10px;
-      font-weight: 600;
-    }
-    .divider { width: 1px; height: 28px; background: #dde1e7; margin: 0 2px; }
+    /* Editor */
+    #editor-scroll{ flex:1; overflow:auto; background:#111; display:flex; align-items:center; padding:20px; -webkit-overflow-scrolling:touch; }
+    #editor-canvas{ display:block; touch-action:none; }
+    #editor-bar{ background:var(--s1); border-top:1px solid var(--border); padding:8px 0 env(safe-area-inset-bottom,8px); display:flex; justify-content:space-around; align-items:center; flex-shrink:0; }
+    .bbar-btn{ display:flex; flex-direction:column; align-items:center; gap:3px; background:none; border:none; color:#555; cursor:pointer; font-size:10px; padding:6px 12px; }
+    .bbar-btn .ico{ font-size:20px; color:#aaa; }
+    #bbar-add{ background:#fff; color:#000; border-radius:50%; width:52px; height:52px; font-size:30px; border:none; cursor:pointer; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-weight:300; }
 
-    /* ── Canvas area ── */
-    #canvas-container {
-      flex: 1;
-      overflow: auto;
-      background: #d8dce3;
-      display: flex;
-      align-items: flex-start;
-      padding: 28px 32px;
-      gap: 0;
-    }
-    #canvas-wrap {
-      flex-shrink: 0;
-    }
-    #slide-labels {
-      display: flex;
-      margin-bottom: 6px;
-    }
-    .slide-label {
-      font-size: 11px;
-      color: #444c5a;
-      font-weight: 600;
-      text-align: center;
-      letter-spacing: 0.3px;
-    }
-    #canvas-shadow {
-      box-shadow: 0 4px 24px rgba(0,0,0,0.18);
-      border-radius: 2px;
-      overflow: hidden;
-      display: inline-block;
-    }
+    /* File input */
+    #file-input{ display:none; }
 
-    /* ── Status bar ── */
-    #statusbar {
-      background: white;
-      border-top: 1px solid #dde1e7;
-      padding: 6px 20px;
-      font-size: 12px;
-      color: #606770;
-      display: flex;
-      justify-content: space-between;
-      flex-shrink: 0;
-    }
-
-    /* ── Loading overlay ── */
-    #loading {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.45);
-      z-index: 999;
-      align-items: center;
-      justify-content: center;
-    }
-    #loading.show { display: flex; }
-    .loading-box {
-      background: white;
-      border-radius: 14px;
-      padding: 36px 52px;
-      text-align: center;
-    }
-    .spinner {
-      width: 44px; height: 44px;
-      border: 4px solid #e4e6eb;
-      border-top-color: #1877f2;
-      border-radius: 50%;
-      animation: spin 0.75s linear infinite;
-      margin: 0 auto;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .loading-box p { margin-top: 14px; font-size: 14px; color: #444; }
-
-    /* ── Toast ── */
-    #toast {
-      position: fixed;
-      bottom: 28px;
-      left: 50%;
-      transform: translateX(-50%) translateY(12px);
-      background: rgba(28,30,33,0.92);
-      color: white;
-      padding: 10px 22px;
-      border-radius: 10px;
-      font-size: 13px;
-      opacity: 0;
-      transition: all 0.25s;
-      pointer-events: none;
-      z-index: 1000;
-      white-space: nowrap;
-    }
-    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-
-    #file-input, #bg-color-input { display: none; }
+    /* Toast */
+    #toast{ position:fixed; bottom:90px; left:50%; transform:translateX(-50%) translateY(10px); background:rgba(0,0,0,.88); color:#fff; padding:9px 18px; border-radius:20px; font-size:13px; opacity:0; transition:all .25s; pointer-events:none; z-index:999; white-space:nowrap; max-width:80vw; text-align:center; }
+    #toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
   </style>
 </head>
 <body>
 
-<!-- Header -->
-<div id="header">
-  <h1>🔲 無縫輪播製作工具 — Facebook</h1>
-  <div class="slide-counter">
-    <label>格數</label>
-    <button class="count-btn" onclick="changeSlides(-1)">−</button>
-    <span id="slide-num">6</span>
-    <button class="count-btn" onclick="changeSlides(+1)">+</button>
+<!-- ── Page: Gallery ── -->
+<div id="pg-gallery" class="page">
+  <div class="hdr">
+    <div style="min-width:44px"></div>
+    <h1>選擇模板</h1>
+    <div style="min-width:44px"></div>
   </div>
-  <button id="btn-export" onclick="exportSlides()">⬇ 匯出所有格</button>
+  <div id="tpl-grid"></div>
 </div>
 
-<!-- Toolbar -->
-<div id="toolbar">
-  <button class="tool-btn blue" onclick="document.getElementById('file-input').click()">
-    📷 上傳照片
-  </button>
-  <div class="divider"></div>
-  <button class="tool-btn" onclick="document.getElementById('bg-color-input').click()">
-    🎨 背景色
-  </button>
-  <button class="tool-btn" onclick="sendToBack()">⬇ 移至最下層</button>
-  <button class="tool-btn" onclick="bringToFront()">⬆ 移至最上層</button>
-  <button class="tool-btn" onclick="deleteSelected()">🗑 刪除選取</button>
-  <button class="tool-btn" onclick="clearAll()">✕ 清除全部</button>
-  <div class="divider"></div>
-  <button class="tool-btn soon" onclick="comingSoon('文字')">T 文字 <span class="badge">即將推出</span></button>
-  <button class="tool-btn soon" onclick="comingSoon('貼圖')">✨ 貼圖 <span class="badge">即將推出</span></button>
-</div>
-
-<!-- Canvas area -->
-<div id="canvas-container">
-  <div id="canvas-wrap">
-    <div id="slide-labels"></div>
-    <div id="canvas-shadow">
-      <canvas id="main-canvas"></canvas>
+<!-- ── Page: Detail ── -->
+<div id="pg-detail" class="page off-right">
+  <div class="hdr">
+    <button class="hbtn lg" onclick="goBack('gallery')">‹</button>
+    <h1>模板預覽</h1>
+    <div style="min-width:44px"></div>
+  </div>
+  <div id="detail-scroll">
+    <div id="detail-cvs-wrap">
+      <div id="detail-cvs-scroll"><canvas id="detail-canvas"></canvas></div>
+      <div id="detail-dots"></div>
     </div>
+    <div id="detail-meta">
+      <h2 id="d-name">—</h2>
+      <p id="d-desc">—</p>
+    </div>
+    <div id="detail-btns">
+      <button title="分享" onclick="showToast('分享功能即將推出')">⬆</button>
+      <button title="收藏" onclick="showToast('收藏功能即將推出')">🔖</button>
+    </div>
+    <button id="btn-use" onclick="startEditor()">使用模板</button>
   </div>
 </div>
 
-<!-- Status bar -->
-<div id="statusbar">
-  <span id="status-msg">上傳照片開始製作 — 照片可橫跨多格，形成無縫效果</span>
-  <span>Facebook 標準格式 1:1 正方形（匯出 1080×1080）</span>
-</div>
-
-<!-- Loading -->
-<div id="loading">
-  <div class="loading-box">
-    <div class="spinner"></div>
-    <p id="loading-text">正在產生圖片...</p>
+<!-- ── Page: Editor ── -->
+<div id="pg-editor" class="page off-right">
+  <div class="hdr">
+    <button class="hbtn lg" onclick="goBack('detail')">‹</button>
+    <h1 id="editor-title">編輯</h1>
+    <button class="hbtn blue" onclick="saveAll()">儲存</button>
+  </div>
+  <div id="editor-scroll">
+    <canvas id="editor-canvas"></canvas>
+  </div>
+  <div id="editor-bar">
+    <button class="bbar-btn" onclick="showToast('即將推出')"><span class="ico">⬤</span>背景</button>
+    <button class="bbar-btn" onclick="showToast('即將推出')"><span class="ico">⧉</span>圖層</button>
+    <button id="bbar-add" onclick="addToActive()">+</button>
+    <button class="bbar-btn" onclick="showToast('即將推出')"><span class="ico">▣</span>比例</button>
+    <button class="bbar-btn" onclick="showToast('即將推出')"><span class="ico">🎞</span>幻燈片</button>
   </div>
 </div>
 
-<!-- Toast -->
+<input type="file" id="file-input" accept="image/*">
 <div id="toast"></div>
 
-<!-- Hidden inputs -->
-<input type="file" id="file-input" accept="image/*" multiple onchange="handleFiles(this.files)">
-<input type="color" id="bg-color-input" value="#ffffff" oninput="setBgColor(this.value)">
-
 <script>
-// ── Constants ──────────────────────────────────────────
-const SLIDE_PX   = 300;   // display size per slide (px)
-const EXPORT_PX  = 1080;  // export size per slide (px)
-const MIN_SLIDES = 2;
-const MAX_SLIDES = 20;
-const DEFAULT_SLIDES = 6;
+'use strict';
 
-// ── State ──────────────────────────────────────────────
-let canvas;
-let numSlides = DEFAULT_SLIDES;
-let bgColor   = '#ffffff';
-let dividers  = [];
+// ── Templates ─────────────────────────────────────────
+// slots: x/y/w/h in slide-units (1 unit = 1 slide width/height)
+const TPLS = [
+  { id:'a1', name:'雙格全景',   slides:2, photos:1,
+    slots:[{x:0,y:0,w:2,h:1}] },
+  { id:'a2', name:'左大右雙',   slides:2, photos:3,
+    slots:[{x:0,y:0,w:1,h:1},{x:1,y:0,w:1,h:.5},{x:1,y:.5,w:1,h:.5}] },
+  { id:'a3', name:'三格全景',   slides:3, photos:1,
+    slots:[{x:0,y:0,w:3,h:1}] },
+  { id:'a4', name:'全景加側',   slides:3, photos:2,
+    slots:[{x:0,y:0,w:2,h:1},{x:2,y:0,w:1,h:1}] },
+  { id:'a5', name:'側加全景',   slides:3, photos:2,
+    slots:[{x:0,y:0,w:1,h:1},{x:1,y:0,w:2,h:1}] },
+  { id:'a6', name:'三格並排',   slides:3, photos:3,
+    slots:[{x:0,y:0,w:1,h:1},{x:1,y:0,w:1,h:1},{x:2,y:0,w:1,h:1}] },
+  { id:'a7', name:'右大左雙',   slides:2, photos:3,
+    slots:[{x:0,y:0,w:1,h:.5},{x:0,y:.5,w:1,h:.5},{x:1,y:0,w:1,h:1}] },
+  { id:'a8', name:'四格全景',   slides:4, photos:1,
+    slots:[{x:0,y:0,w:4,h:1}] },
+  { id:'a9', name:'四格並排',   slides:4, photos:4,
+    slots:[{x:0,y:0,w:1,h:1},{x:1,y:0,w:1,h:1},{x:2,y:0,w:1,h:1},{x:3,y:0,w:1,h:1}] },
+  { id:'b1', name:'側全景側',   slides:4, photos:3,
+    slots:[{x:0,y:0,w:1,h:1},{x:1,y:0,w:2,h:1},{x:3,y:0,w:1,h:1}] },
+  { id:'b2', name:'四格上下',   slides:2, photos:4,
+    slots:[{x:0,y:0,w:1,h:.5},{x:0,y:.5,w:1,h:.5},{x:1,y:0,w:1,h:.5},{x:1,y:.5,w:1,h:.5}] },
+  { id:'b3', name:'五格全景',   slides:5, photos:1,
+    slots:[{x:0,y:0,w:5,h:1}] },
+];
 
-// ── Init ───────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
-  canvas = new fabric.Canvas('main-canvas', {
-    width:           numSlides * SLIDE_PX,
-    height:          SLIDE_PX,
-    backgroundColor: bgColor,
-    preserveObjectStacking: true,
+const SLOT_COLORS = ['#1a2535','#251a35','#1a3525','#352520','#25351a','#201a35','#35251a','#1a2535'];
+
+// ── State ─────────────────────────────────────────────
+let curTpl = null;
+let slotPhotos = [];   // [{img,ox,oy,scale}] or null
+let activeSlot = -1;
+const EXPORT_PX = 1080;
+let S = 280;  // display slide size (px), set per screen
+
+// ── Page navigation ───────────────────────────────────
+function goTo(id) {
+  const order = ['gallery','detail','editor'];
+  const pages = { gallery:'pg-gallery', detail:'pg-detail', editor:'pg-editor' };
+  const toIdx = order.indexOf(id);
+  order.forEach((p, i) => {
+    const el = document.getElementById(pages[p]);
+    el.classList.remove('off-right','off-left');
+    if (i > toIdx) el.classList.add('off-right');
+    if (i < toIdx) el.classList.add('off-left');
   });
-
-  canvas.on('selection:created', onSelect);
-  canvas.on('selection:updated', onSelect);
-  canvas.on('selection:cleared', () => setStatus('點擊選取物件，或上傳更多照片'));
-
-  drawDividers();
-  updateLabels();
-  updateSlideNum();
-});
-
-// ── Dividers ───────────────────────────────────────────
-function drawDividers() {
-  dividers.forEach(l => canvas.remove(l));
-  dividers = [];
-
-  for (let i = 1; i < numSlides; i++) {
-    const x = i * SLIDE_PX;
-    const line = new fabric.Line([x, 0, x, SLIDE_PX], {
-      stroke: '#1877f2',
-      strokeWidth: 1.5,
-      strokeDashArray: [8, 5],
-      selectable: false,
-      evented:    false,
-      _div:       true,
-    });
-    canvas.add(line);
-    dividers.push(line);
-  }
-  dividers.forEach(l => canvas.bringToFront(l));
-  canvas.renderAll();
 }
+function goBack(id) { goTo(id); }
 
-// ── Slide count ────────────────────────────────────────
-function changeSlides(delta) {
-  const n = Math.min(MAX_SLIDES, Math.max(MIN_SLIDES, numSlides + delta));
-  if (n === numSlides) return;
-  numSlides = n;
-  canvas.setWidth(numSlides * SLIDE_PX);
-  drawDividers();
-  updateLabels();
-  updateSlideNum();
-}
+// ── Gallery ───────────────────────────────────────────
+function buildGallery() {
+  const grid = document.getElementById('tpl-grid');
+  const cardW = Math.floor((window.innerWidth - 4) / 2);
 
-function updateSlideNum() {
-  document.getElementById('slide-num').textContent = numSlides;
-}
+  TPLS.forEach(tpl => {
+    const card = document.createElement('div');
+    card.className = 'tcard';
+    card.onclick = () => openDetail(tpl);
 
-function updateLabels() {
-  const el = document.getElementById('slide-labels');
-  el.innerHTML = '';
-  for (let i = 1; i <= numSlides; i++) {
-    const d = document.createElement('div');
-    d.className = 'slide-label';
-    d.style.width = SLIDE_PX + 'px';
-    d.textContent = `第 ${i} 格`;
-    el.appendChild(d);
-  }
-}
+    const cvs = document.createElement('canvas');
+    const th = Math.floor(cardW / tpl.slides); // tile height = tile width
+    cvs.width  = cardW;
+    cvs.height = th;
+    drawLayout(cvs, tpl, cardW / tpl.slides, false, true);
+    card.appendChild(cvs);
 
-// ── Upload photos ──────────────────────────────────────
-function handleFiles(files) {
-  if (!files || files.length === 0) return;
-  const arr = Array.from(files);
-  showToast(`正在載入 ${arr.length} 張照片...`);
-  let loaded = 0;
-  let failed = 0;
+    const info = document.createElement('div');
+    info.className = 'tcard-info';
+    info.innerHTML = `<strong>${tpl.name}</strong><span>📷 ${tpl.photos} 張  🔲 ${tpl.slides} 格</span>`;
+    card.appendChild(info);
 
-  arr.forEach((file, idx) => {
-    if (!file.type.startsWith('image/')) { failed++; return; }
-
-    const reader = new FileReader();
-    reader.onerror = () => {
-      failed++;
-      showToast('讀取失敗，請重試');
-    };
-    reader.onload = e => {
-      // Create native img element first, then wrap with Fabric
-      const dataURL = e.target.result;
-      const imgEl = document.createElement('img');
-      imgEl.onerror = () => {
-        failed++;
-        done();
-      };
-      imgEl.onload = () => {
-        try {
-          const fImg = new fabric.Image(imgEl);
-          const maxSize = SLIDE_PX * 0.92;
-          const w = imgEl.naturalWidth  || imgEl.width  || 1;
-          const h = imgEl.naturalHeight || imgEl.height || 1;
-          fImg.scale(maxSize / Math.max(w, h));
-
-          const slideIdx = idx % numSlides;
-          fImg.set({
-            left: slideIdx * SLIDE_PX + 8,
-            top:  Math.round((SLIDE_PX - fImg.getScaledHeight()) / 2),
-            cornerSize:         10,
-            cornerStyle:        'circle',
-            transparentCorners: false,
-            cornerColor:        '#1877f2',
-            borderColor:        '#1877f2',
-            borderScaleFactor:  1.5,
-          });
-
-          canvas.add(fImg);
-          canvas.setActiveObject(fImg);
-          dividers.forEach(l => canvas.bringToFront(l));
-          canvas.renderAll();
-          loaded++;
-        } catch(err) {
-          console.error(err);
-          failed++;
-        }
-        done();
-      };
-      imgEl.src = dataURL;
-    };
-    reader.readAsDataURL(file);
+    grid.appendChild(card);
   });
+}
 
-  function done() {
-    if (loaded + failed < arr.length) return;
-    if (loaded > 0) {
-      showToast(`✅ 已新增 ${loaded} 張照片`);
-      setStatus('拖曳照片調整位置，可讓照片橫跨多格形成無縫效果');
+// ── Draw template layout ──────────────────────────────
+function drawLayout(canvas, tpl, tileSize, showPlus, gradient) {
+  const W = tpl.slides * tileSize, H = tileSize;
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+
+  ctx.fillStyle = '#0d0d0d';
+  ctx.fillRect(0,0,W,H);
+
+  tpl.slots.forEach((slot, i) => {
+    const sx = slot.x * tileSize, sy = slot.y * tileSize;
+    const sw = slot.w * tileSize, sh = slot.h * tileSize;
+    const gap = Math.max(1.5, tileSize * 0.01);
+
+    const x0 = sx + gap, y0 = sy + gap, w0 = sw - gap*2, h0 = sh - gap*2;
+
+    if (gradient) {
+      const g = ctx.createLinearGradient(x0, y0, x0+w0, y0+h0);
+      const [c1,c2] = [SLOT_COLORS[i*2 % SLOT_COLORS.length], SLOT_COLORS[(i*2+1) % SLOT_COLORS.length]];
+      g.addColorStop(0, c1); g.addColorStop(1, c2);
+      ctx.fillStyle = g;
     } else {
-      showToast('載入失敗，請換張圖片試試');
+      ctx.fillStyle = '#222';
     }
-    document.getElementById('file-input').value = '';
-  }
-}
+    ctx.fillRect(x0, y0, w0, h0);
 
-// ── Background color ───────────────────────────────────
-function setBgColor(color) {
-  bgColor = color;
-  canvas.setBackgroundColor(color, canvas.renderAll.bind(canvas));
-}
-
-// ── Layer controls ─────────────────────────────────────
-function sendToBack() {
-  const objs = canvas.getActiveObjects().filter(o => !o._div);
-  objs.forEach(o => canvas.sendToBack(o));
-  dividers.forEach(l => canvas.bringToFront(l));
-  canvas.renderAll();
-}
-
-function bringToFront() {
-  const objs = canvas.getActiveObjects().filter(o => !o._div);
-  objs.forEach(o => canvas.bringToFront(o));
-  dividers.forEach(l => canvas.bringToFront(l));
-  canvas.renderAll();
-}
-
-// ── Delete / Clear ─────────────────────────────────────
-function deleteSelected() {
-  const sel = canvas.getActiveObjects().filter(o => !o._div);
-  if (!sel.length) { showToast('請先選取要刪除的物件'); return; }
-  sel.forEach(o => canvas.remove(o));
-  canvas.discardActiveObject();
-  canvas.renderAll();
-  showToast('已刪除');
-}
-
-function clearAll() {
-  const items = canvas.getObjects().filter(o => !o._div);
-  if (!items.length) { showToast('畫布已空'); return; }
-  if (!confirm(`確定清除畫布上全部 ${items.length} 個物件？`)) return;
-  items.forEach(o => canvas.remove(o));
-  canvas.renderAll();
-  showToast('已清除全部');
-}
-
-// ── Export ─────────────────────────────────────────────
-async function exportSlides() {
-  const content = canvas.getObjects().filter(o => !o._div);
-  if (!content.length) { showToast('請先上傳照片'); return; }
-
-  showLoading(true, '準備中...');
-
-  try {
-    // Hide dividers
-    dividers.forEach(l => l.visible = false);
-    canvas.renderAll();
-
-    // Render full canvas at export resolution
-    const scale = EXPORT_PX / SLIDE_PX;
-    const fullDataURL = canvas.toDataURL({ format: 'png', multiplier: scale });
-
-    // Restore dividers
-    dividers.forEach(l => l.visible = true);
-    canvas.renderAll();
-
-    // Load rendered image
-    const fullImg = await loadImage(fullDataURL);
-
-    const zip = new JSZip();
-
-    for (let i = 0; i < numSlides; i++) {
-      showLoading(true, `正在產生第 ${i + 1} / ${numSlides} 格...`);
-
-      const off = document.createElement('canvas');
-      off.width = off.height = EXPORT_PX;
-      const ctx = off.getContext('2d');
-
-      // Background
-      ctx.fillStyle = bgColor;
-      ctx.fillRect(0, 0, EXPORT_PX, EXPORT_PX);
-
-      // Slice
-      ctx.drawImage(fullImg,
-        i * EXPORT_PX, 0, EXPORT_PX, EXPORT_PX,
-        0, 0, EXPORT_PX, EXPORT_PX
-      );
-
-      const blob = await toBlob(off);
-      zip.file(`第${String(i+1).padStart(2,'0')}格.png`, blob);
+    if (showPlus) {
+      const cx = sx + sw/2, cy = sy + sh/2;
+      const r = Math.min(sw,sh) * 0.14;
+      ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2);
+      ctx.fillStyle = 'rgba(90,90,90,.85)'; ctx.fill();
+      ctx.fillStyle = '#fff';
+      ctx.font = `bold ${r*1.3}px sans-serif`;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('+', cx, cy);
     }
-
-    showLoading(true, '打包下載中...');
-    const zipBlob = await zip.generateAsync({ type: 'blob' });
-    saveAs(zipBlob, `無縫輪播_${numSlides}格.zip`);
-    showToast(`🎉 已匯出 ${numSlides} 張圖片，上傳到 Facebook 時請按順序貼上`);
-  } catch (err) {
-    console.error(err);
-    showToast('匯出失敗，請重試');
-  } finally {
-    showLoading(false);
-  }
-}
-
-// ── Helpers ────────────────────────────────────────────
-function loadImage(src) {
-  return new Promise((res, rej) => {
-    const img = new Image();
-    img.onload = () => res(img);
-    img.onerror = rej;
-    img.src = src;
   });
+
+  // Slide dividers
+  ctx.strokeStyle = 'rgba(255,255,255,.12)';
+  ctx.lineWidth = 1;
+  for (let i=1; i<tpl.slides; i++) {
+    ctx.beginPath();
+    ctx.moveTo(i*tileSize, 0); ctx.lineTo(i*tileSize, H);
+    ctx.stroke();
+  }
 }
 
-function toBlob(cvs) {
-  return new Promise(res => cvs.toBlob(res, 'image/png'));
+// ── Detail ────────────────────────────────────────────
+function openDetail(tpl) {
+  curTpl = tpl;
+  document.getElementById('d-name').textContent = tpl.name;
+  document.getElementById('d-desc').textContent =
+    `直向  📷 ${tpl.photos} 張照片  🔲 ${tpl.slides} 格`;
+
+  // Preview canvas
+  const maxW = Math.min(window.innerWidth - 32, 400);
+  const ts = Math.min(Math.floor(maxW / tpl.slides), 180);
+  const cvs = document.getElementById('detail-canvas');
+  drawLayout(cvs, tpl, ts, false, true);
+
+  // Dots
+  const dots = document.getElementById('detail-dots');
+  dots.innerHTML = '';
+  for (let i=0; i<tpl.slides; i++) {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i===0 ? ' on':'');
+    dots.appendChild(d);
+  }
+
+  goTo('detail');
 }
 
-function onSelect() {
-  const n = canvas.getActiveObjects().filter(o => !o._div).length;
-  setStatus(n === 1 ? '拖曳移動 · 角落縮放 · Del 鍵刪除' : `已選取 ${n} 個物件`);
+// ── Editor ────────────────────────────────────────────
+let evBound = false;
+
+function startEditor() {
+  if (!curTpl) return;
+  slotPhotos = curTpl.slots.map(() => null);
+  activeSlot = -1;
+
+  document.getElementById('editor-title').textContent = curTpl.name;
+
+  // Compute display size: try to fit 1.2 slides in viewport width
+  const vw = window.innerWidth - 40;
+  S = Math.min(Math.floor(vw * 0.88), 320);
+
+  const cvs = document.getElementById('editor-canvas');
+  cvs.width  = curTpl.slides * S;
+  cvs.height = S;
+
+  renderEditor();
+  if (!evBound) { bindEvents(); evBound = true; }
+  goTo('editor');
 }
 
-function setStatus(msg) {
-  document.getElementById('status-msg').textContent = msg;
+// ── Render ────────────────────────────────────────────
+function renderEditor() {
+  const tpl = curTpl;
+  const cvs = document.getElementById('editor-canvas');
+  const ctx = cvs.getContext('2d');
+  const G = 3; // gap between slots
+
+  ctx.fillStyle = '#111';
+  ctx.fillRect(0,0,cvs.width,cvs.height);
+
+  tpl.slots.forEach((slot, i) => {
+    const sx = slot.x*S, sy = slot.y*S, sw = slot.w*S, sh = slot.h*S;
+    const x0=sx+G, y0=sy+G, w0=sw-G*2, h0=sh-G*2;
+
+    ctx.save();
+    ctx.beginPath(); ctx.rect(x0,y0,w0,h0); ctx.clip();
+
+    const ph = slotPhotos[i];
+    if (ph && ph.img) {
+      drawPhoto(ctx, ph.img, sx, sy, sw, sh, ph.ox, ph.oy, ph.scale, G);
+    } else {
+      ctx.fillStyle = '#1d1d1d'; ctx.fillRect(x0,y0,w0,h0);
+      // Plus circle
+      const cx=sx+sw/2, cy=sy+sh/2, r=Math.min(sw,sh)*0.13;
+      ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2);
+      ctx.fillStyle = i===activeSlot ? '#444':'rgba(80,80,80,.8)'; ctx.fill();
+      ctx.fillStyle='#fff';
+      ctx.font=`bold ${r*1.4}px sans-serif`;
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText('+',cx,cy);
+    }
+    ctx.restore();
+
+    // Active highlight
+    if (i===activeSlot) {
+      ctx.strokeStyle='#0095f6'; ctx.lineWidth=2;
+      ctx.strokeRect(x0+1,y0+1,w0-2,h0-2);
+    }
+  });
+
+  // Slide dividers
+  ctx.strokeStyle='rgba(255,255,255,.2)'; ctx.lineWidth=1;
+  for (let i=1; i<tpl.slides; i++) {
+    ctx.beginPath(); ctx.moveTo(i*S,0); ctx.lineTo(i*S,S); ctx.stroke();
+  }
 }
 
-function comingSoon(f) { showToast(`${f}功能即將推出 🚀`); }
+function drawPhoto(ctx, img, slotX, slotY, slotW, slotH, ox, oy, scale, gap) {
+  const AR = img.naturalWidth / img.naturalHeight;
+  const sAR = slotW / slotH;
+  let dw, dh;
+  if (AR > sAR) { dh=slotH*scale; dw=dh*AR; }
+  else           { dw=slotW*scale; dh=dw/AR; }
+  const x = slotX + (slotW-dw)/2 + ox;
+  const y = slotY + (slotH-dh)/2 + oy;
+  ctx.drawImage(img, x, y, dw, dh);
+}
 
-let _toastT;
+// ── Events ────────────────────────────────────────────
+let drag = null;
+let pinch = null;
+
+function bindEvents() {
+  const cvs = document.getElementById('editor-canvas');
+  const fi  = document.getElementById('file-input');
+
+  // File selected
+  fi.addEventListener('change', e => {
+    const f = e.target.files[0];
+    if (!f || activeSlot<0) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const img = new Image();
+      img.onload = () => {
+        slotPhotos[activeSlot] = {img, ox:0, oy:0, scale:1};
+        renderEditor();
+        showToast('照片已加入 · 拖曳移動 · 雙指縮放');
+      };
+      img.onerror = () => showToast('圖片載入失敗');
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(f);
+    fi.value = '';
+  });
+
+  // Touch
+  cvs.addEventListener('touchstart', e => {
+    e.preventDefault();
+    if (e.touches.length===1) {
+      const pt = getXY(cvs, e.touches[0]);
+      const si = hitSlot(pt.x, pt.y);
+      if (si<0) return;
+      activeSlot = si;
+      renderEditor();
+      if (!slotPhotos[si]) {
+        fi.click();
+      } else {
+        drag = {x:pt.x, y:pt.y, ox:slotPhotos[si].ox, oy:slotPhotos[si].oy};
+      }
+    } else if (e.touches.length===2) {
+      drag = null;
+      const d = pDist(e.touches);
+      const sc = activeSlot>=0 && slotPhotos[activeSlot] ? slotPhotos[activeSlot].scale : 1;
+      pinch = {d0:d, s0:sc};
+    }
+  }, {passive:false});
+
+  cvs.addEventListener('touchmove', e => {
+    e.preventDefault();
+    if (pinch && e.touches.length===2) {
+      const d = pDist(e.touches);
+      const sc = Math.max(.3, Math.min(6, pinch.s0 * d/pinch.d0));
+      if (activeSlot>=0 && slotPhotos[activeSlot]) { slotPhotos[activeSlot].scale=sc; renderEditor(); }
+    } else if (drag && e.touches.length===1) {
+      const pt = getXY(cvs, e.touches[0]);
+      slotPhotos[activeSlot].ox = drag.ox + (pt.x-drag.x);
+      slotPhotos[activeSlot].oy = drag.oy + (pt.y-drag.y);
+      renderEditor();
+    }
+  }, {passive:false});
+
+  cvs.addEventListener('touchend', () => { drag=null; pinch=null; });
+
+  // Mouse (desktop)
+  cvs.addEventListener('mousedown', e => {
+    const pt = getXY(cvs, e);
+    const si = hitSlot(pt.x, pt.y);
+    if (si<0) return;
+    activeSlot = si; renderEditor();
+    if (!slotPhotos[si]) { fi.click(); }
+    else { drag = {x:pt.x, y:pt.y, ox:slotPhotos[si].ox, oy:slotPhotos[si].oy}; }
+  });
+  cvs.addEventListener('mousemove', e => {
+    if (!drag || activeSlot<0 || !slotPhotos[activeSlot]) return;
+    const pt = getXY(cvs, e);
+    slotPhotos[activeSlot].ox = drag.ox + (pt.x-drag.x);
+    slotPhotos[activeSlot].oy = drag.oy + (pt.y-drag.y);
+    renderEditor();
+  });
+  cvs.addEventListener('mouseup', () => drag=null);
+  cvs.addEventListener('wheel', e => {
+    e.preventDefault();
+    if (activeSlot<0||!slotPhotos[activeSlot]) return;
+    slotPhotos[activeSlot].scale = Math.max(.3, Math.min(6, slotPhotos[activeSlot].scale * (e.deltaY>0?.92:1.08)));
+    renderEditor();
+  }, {passive:false});
+}
+
+function getXY(cvs, e) {
+  const r = cvs.getBoundingClientRect();
+  const sc = cvs.width / r.width;
+  return { x:(e.clientX-r.left)*sc, y:(e.clientY-r.top)*sc };
+}
+function hitSlot(x,y) {
+  return curTpl.slots.findIndex(sl => x>=sl.x*S && x<(sl.x+sl.w)*S && y>=sl.y*S && y<(sl.y+sl.h)*S);
+}
+function pDist(touches) {
+  const dx=touches[0].clientX-touches[1].clientX, dy=touches[0].clientY-touches[1].clientY;
+  return Math.sqrt(dx*dx+dy*dy);
+}
+
+function addToActive() {
+  if (activeSlot<0) { showToast('請先點擊要加入照片的區格'); return; }
+  document.getElementById('file-input').click();
+}
+
+// ── Export ────────────────────────────────────────────
+async function saveAll() {
+  const tpl = curTpl;
+  if (!slotPhotos.some(p=>p&&p.img)) { showToast('請先加入至少一張照片'); return; }
+  showToast(`正在匯出 ${tpl.slides} 張...`);
+
+  const EP = EXPORT_PX;
+  const scale = EP / S;  // export : display ratio
+
+  for (let si=0; si<tpl.slides; si++) {
+    const off = document.createElement('canvas');
+    off.width = off.height = EP;
+    const ctx = off.getContext('2d');
+
+    ctx.fillStyle='#111'; ctx.fillRect(0,0,EP,EP);
+
+    tpl.slots.forEach((slot,i) => {
+      const slotX=slot.x*EP, slotY=slot.y*EP, slotW=slot.w*EP, slotH=slot.h*EP;
+      const slideL=si*EP, slideR=slideL+EP;
+      const oL=Math.max(slotX,slideL), oR=Math.min(slotX+slotW,slideR);
+      if (oL>=oR) return;
+
+      const clipX=oL-slideL, clipW=oR-oL, clipY=slotY, clipH=slotH;
+
+      ctx.save();
+      ctx.beginPath(); ctx.rect(clipX,clipY,clipW,clipH); ctx.clip();
+
+      const ph = slotPhotos[i];
+      if (ph&&ph.img) {
+        const img=ph.img;
+        const AR=img.naturalWidth/img.naturalHeight, sAR=slotW/slotH;
+        let dw,dh;
+        if(AR>sAR){dh=slotH*ph.scale;dw=dh*AR;}
+        else{dw=slotW*ph.scale;dh=dw/AR;}
+        const ox = ph.ox*scale, oy = ph.oy*scale;
+        const x = slotX-slideL+(slotW-dw)/2+ox;
+        const y = slotY+(slotH-dh)/2+oy;
+        ctx.drawImage(img,x,y,dw,dh);
+      } else {
+        ctx.fillStyle='#1d1d1d'; ctx.fillRect(clipX,clipY,clipW,clipH);
+      }
+      ctx.restore();
+    });
+
+    // Download this slide
+    await new Promise(res => {
+      off.toBlob(blob => {
+        const a=document.createElement('a');
+        a.href=URL.createObjectURL(blob);
+        a.download=`第${String(si+1).padStart(2,'0')}格.png`;
+        a.click();
+        setTimeout(()=>{URL.revokeObjectURL(a.href);res();},300);
+      },'image/png');
+    });
+    await new Promise(r=>setTimeout(r,350));
+  }
+
+  showToast(`✅ 已下載 ${tpl.slides} 張，請按順序貼到 Facebook`);
+}
+
+// ── Toast ─────────────────────────────────────────────
+let toastT;
 function showToast(msg) {
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.classList.add('show');
-  clearTimeout(_toastT);
-  _toastT = setTimeout(() => el.classList.remove('show'), 3500);
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.classList.add('show');
+  clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove('show'),3000);
 }
 
-function showLoading(show, txt) {
-  document.getElementById('loading').classList.toggle('show', show);
-  if (txt) document.getElementById('loading-text').textContent = txt;
-}
-
-// ── Keyboard shortcuts ─────────────────────────────────
-document.addEventListener('keydown', e => {
-  const tag = document.activeElement.tagName;
-  if (tag === 'INPUT' || tag === 'TEXTAREA') return;
-  if (e.key === 'Delete' || e.key === 'Backspace') deleteSelected();
-  if (e.key === 'Escape') { canvas.discardActiveObject(); canvas.renderAll(); }
-  if (e.key === '[') sendToBack();
-  if (e.key === ']') bringToFront();
-});
+// ── Init ──────────────────────────────────────────────
+buildGallery();
+goTo('gallery');
 </script>
-
 </body>
 </html>
