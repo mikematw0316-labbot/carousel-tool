@@ -19,15 +19,15 @@
     .hbtn.blue{ color:var(--blue); font-weight:600; }
 
     #tpl-grid{ flex:1; overflow-y:auto; display:grid; grid-template-columns:1fr 1fr; gap:2px; background:var(--border); }
-    .cat-hdr{ grid-column:1/-1; background:#0a0a0a; padding:11px 16px 8px; font-size:11px; font-weight:700; color:#555; letter-spacing:.1em; border-bottom:1px solid var(--border); }
-    .tcard{ background:var(--s1); cursor:pointer; }
-    .tcard:active{ opacity:.7; }
+    .cat-hdr{ grid-column:1/-1; background:#000; padding:18px 16px 8px; font-size:10px; font-weight:600; color:#3a3a3a; letter-spacing:.14em; text-transform:uppercase; }
+    .tcard{ background:var(--s1); cursor:pointer; position:relative; overflow:hidden; }
+    .tcard:active{ opacity:.75; }
     .tcard canvas{ display:block; width:100%; height:auto; }
-    .tcard-info{ padding:8px 10px 12px; }
-    .tcard-info strong{ display:block; font-size:13px; margin-bottom:3px; }
-    .tcard-info span{ font-size:11px; color:#555; }
+    .tcard-info{ position:absolute; bottom:0; left:0; right:0; padding:28px 10px 10px; background:linear-gradient(transparent,rgba(0,0,0,.8)); display:flex; align-items:flex-end; justify-content:space-between; pointer-events:none; }
+    .tcard-name{ font-size:12px; font-weight:500; color:rgba(255,255,255,.9); letter-spacing:0; }
+    .tcard-meta{ font-size:11px; color:rgba(255,255,255,.38); }
 
-    #editor-scroll{ flex:1; overflow:auto; background:#111; -webkit-overflow-scrolling:touch; display:flex; align-items:center; justify-content:center; }
+    #editor-scroll{ flex:1; overflow:auto; background:#111; -webkit-overflow-scrolling:touch; display:flex; align-items:center; justify-content:flex-start; padding:16px; }
     #editor-canvas{ display:block; touch-action:none; flex-shrink:0; }
 
     #export-overlay{ position:fixed; inset:0; background:rgba(0,0,0,.96); z-index:200; display:none; flex-direction:column; }
@@ -41,6 +41,10 @@
     .export-item img{ width:100%; display:block; border-radius:6px; }
     .export-label{ font-size:12px; color:#555; text-align:center; margin-top:6px; }
 
+    #update-btn{ position:fixed; display:none; flex-direction:column; gap:8px; z-index:150; transform:translate(-50%,-50%); align-items:center; pointer-events:none; }
+    #update-btn.show{ display:flex; pointer-events:auto; }
+    #update-btn button{ background:rgba(10,10,10,.88); border:1px solid rgba(255,255,255,.18); color:#fff; padding:11px 24px; border-radius:24px; font-size:14px; font-weight:500; cursor:pointer; min-height:44px; white-space:nowrap; -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px); }
+    #update-btn .ubtn-cancel{ font-size:12px; padding:8px 20px; color:rgba(255,255,255,.5); background:rgba(0,0,0,.6); }
     #file-input{ display:none; }
     #toast{ position:fixed; bottom:40px; left:50%; transform:translateX(-50%) translateY(10px); background:rgba(20,20,20,.93); color:#fff; padding:9px 18px; border-radius:20px; font-size:13px; opacity:0; transition:all .25s; pointer-events:none; z-index:999; white-space:nowrap; max-width:82vw; text-align:center; }
     #toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
@@ -79,6 +83,10 @@
 </div>
 
 <input type="file" id="file-input" accept="image/*">
+<div id="update-btn">
+  <button onclick="replacePhoto()">更換照片</button>
+  <button class="ubtn-cancel" onclick="hideUpdateBtn()">取消</button>
+</div>
 <div id="toast"></div>
 
 <script>
@@ -263,7 +271,7 @@ function goTo(id) {
     if (i < toIdx) el.classList.add('off-left');
   });
 }
-function goBack() { goTo('gallery'); }
+function goBack() { hideUpdateBtn(); goTo('gallery'); }
 
 // ── Slot helpers ──────────────────────────────────────
 function isOv(sl) { return !!sl.ov; }
@@ -296,7 +304,7 @@ function buildGallery() {
 
     const info = document.createElement('div');
     info.className = 'tcard-info';
-    info.innerHTML = `<strong>${tpl.name}</strong><span>📷 ${tpl.photos} 張  🔲 ${tpl.slides} 格</span>`;
+    info.innerHTML = `<span class="tcard-name">${tpl.name}</span><span class="tcard-meta">${tpl.photos} 張</span>`;
     card.appendChild(info);
     grid.appendChild(card);
   });
@@ -317,15 +325,8 @@ function drawLayout(canvas, tpl, tileSize, gradient) {
     if (isOv(sl)) return;
     const sx=sl.x*tileSize, sy=sl.y*tileSize, sw=sl.w*tileSize, sh=sl.h*tileSize;
     const x0=sx+gap, y0=sy+gap, w0=sw-gap*2, h0=sh-gap*2;
-    if (tpl.cat === 'overlay') {
-      // Warm neutral gray — looks like a real photo placeholder
-      ctx.fillStyle = OV_BG_COLOR;
-    } else if (gradient) {
-      const g = ctx.createLinearGradient(x0,y0,x0+w0,y0+h0);
-      g.addColorStop(0, SLOT_COLORS[i*2 % SLOT_COLORS.length]);
-      g.addColorStop(1, SLOT_COLORS[(i*2+1) % SLOT_COLORS.length]);
-      ctx.fillStyle = g;
-    } else { ctx.fillStyle = '#222'; }
+    // Clean consistent slot color — modern editorial look
+    ctx.fillStyle = '#1c1c1c';
     ctx.fillRect(x0,y0,w0,h0);
   });
 
@@ -393,7 +394,8 @@ function startEditor(tpl) {
   const scrollEl = document.getElementById('editor-scroll');
   const availW = scrollEl.clientWidth  || window.innerWidth;
   const availH = (scrollEl.clientHeight || window.innerHeight) - 52;
-  viewScale = Math.min(1, (availW-32)/cvs.width, (availH-32)/cvs.height);
+  // Scale by height only so each slide is tappable; wide templates scroll horizontally
+  viewScale = Math.min(1, (availH-32)/cvs.height);
   applyViewScale();
 
   // Editor scroll bg matches template mood
@@ -407,8 +409,12 @@ function startEditor(tpl) {
 
 function applyViewScale() {
   const cvs = document.getElementById('editor-canvas');
-  cvs.style.width  = (cvs.width  * viewScale)+'px';
-  cvs.style.height = (cvs.height * viewScale)+'px';
+  const scroll = document.getElementById('editor-scroll');
+  const dw = cvs.width * viewScale, dh = cvs.height * viewScale;
+  cvs.style.width = dw+'px'; cvs.style.height = dh+'px';
+  // Center if narrower than scroll area, left-align (scrollable) if wider
+  const avail = (scroll.clientWidth || window.innerWidth) - 32;
+  cvs.style.marginLeft = dw < avail ? ((avail - dw) / 2) + 'px' : '0';
 }
 
 // ── Render editor ─────────────────────────────────────
@@ -524,6 +530,38 @@ function drawOvSlot(ctx, sl, i, S, lightBg=false) {
   ctx.restore();
 }
 
+// ── Update button (replace photo) ────────────────────
+let updateBtnSlot = -1;
+function showUpdateBtn(si) {
+  updateBtnSlot = si;
+  const sl = curTpl.slots[si];
+  const cvs = document.getElementById('editor-canvas');
+  const rect = cvs.getBoundingClientRect();
+  const S = LOGICAL_S;
+  let bx, by;
+  if (isOv(sl)) {
+    bx = rect.left + sl.cx * S * viewScale;
+    by = rect.top  + sl.cy * S * viewScale;
+  } else {
+    bx = rect.left + (sl.x + sl.w / 2) * S * viewScale;
+    by = rect.top  + (sl.y + sl.h / 2) * S * viewScale;
+  }
+  const btn = document.getElementById('update-btn');
+  btn.style.left = bx + 'px';
+  btn.style.top  = by + 'px';
+  btn.classList.add('show');
+}
+function hideUpdateBtn() {
+  document.getElementById('update-btn').classList.remove('show');
+  updateBtnSlot = -1;
+}
+function replacePhoto() {
+  if (updateBtnSlot < 0) return;
+  activeSlot = updateBtnSlot;
+  hideUpdateBtn();
+  document.getElementById('file-input').click();
+}
+
 // ── Hit testing ───────────────────────────────────────
 function hitSlot(x, y) {
   const S = LOGICAL_S;
@@ -574,6 +612,7 @@ function bindEvents() {
 
   cvs.addEventListener('touchstart', e => {
     e.preventDefault();
+    hideUpdateBtn();
     drag=null; pinch=null; tapInfo=null;
     if (e.touches.length===1) {
       const pt=getXY(cvs,e.touches[0]);
@@ -617,7 +656,10 @@ function bindEvents() {
   cvs.addEventListener('touchend', e => {
     if(e.touches.length<2) pinch=null;
     if(e.touches.length===0) {
-      if(tapInfo!==null&&!slotPhotos[tapInfo.si]) fi.click();
+      if(tapInfo!==null) {
+        if(!slotPhotos[tapInfo.si]) { fi.click(); }
+        else { showUpdateBtn(tapInfo.si); }
+      }
       drag=null; tapInfo=null;
     }
   });
