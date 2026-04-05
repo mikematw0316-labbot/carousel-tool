@@ -41,6 +41,9 @@
     .export-item img{ width:100%; display:block; border-radius:6px; }
     .export-label{ font-size:12px; color:#555; text-align:center; margin-top:6px; }
 
+    #zoom-ctrl{ position:absolute; right:14px; bottom:14px; display:none; flex-direction:column; gap:6px; z-index:50; }
+    #zoom-ctrl.show{ display:flex; }
+    .zbtn{ width:42px; height:42px; border-radius:50%; background:rgba(18,18,18,.9); border:1px solid rgba(255,255,255,.14); color:#fff; font-size:22px; line-height:1; display:flex; align-items:center; justify-content:center; cursor:pointer; -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); }
     #update-btn{ position:fixed; display:none; flex-direction:column; gap:8px; z-index:150; transform:translate(-50%,-50%); align-items:center; pointer-events:none; }
     #update-btn.show{ display:flex; pointer-events:auto; }
     #update-btn button{ background:rgba(10,10,10,.88); border:1px solid rgba(255,255,255,.18); color:#fff; padding:11px 24px; border-radius:24px; font-size:14px; font-weight:500; cursor:pointer; min-height:44px; white-space:nowrap; -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px); }
@@ -69,6 +72,10 @@
   </div>
   <div id="editor-scroll">
     <canvas id="editor-canvas"></canvas>
+  </div>
+  <div id="zoom-ctrl">
+    <button class="zbtn" ontouchend="event.preventDefault();zoomEditor(1)" onclick="zoomEditor(1)">+</button>
+    <button class="zbtn" ontouchend="event.preventDefault();zoomEditor(-1)" onclick="zoomEditor(-1)">−</button>
   </div>
 </div>
 
@@ -271,7 +278,7 @@ function goTo(id) {
     if (i < toIdx) el.classList.add('off-left');
   });
 }
-function goBack() { hideUpdateBtn(); goTo('gallery'); }
+function goBack() { hideUpdateBtn(); document.getElementById('zoom-ctrl').classList.remove('show'); goTo('gallery'); }
 
 // ── Slot helpers ──────────────────────────────────────
 function isOv(sl) { return !!sl.ov; }
@@ -315,18 +322,21 @@ function drawLayout(canvas, tpl, tileSize, gradient) {
   const W = tpl.slides * tileSize, H = tileSize;
   canvas.width = W; canvas.height = H;
   const ctx = canvas.getContext('2d');
-  ctx.fillStyle = tpl.bg || '#0d0d0d';
+  ctx.fillStyle = tpl.bg || '#000';
   ctx.fillRect(0,0,W,H);
 
-  const gap = Math.max(1.5, tileSize * 0.012);
+  const gap = Math.max(2, tileSize * 0.018);
+  // Distinct warm/cool tones per slot so layout structure is clear at a glance
+  const PREV_FILLS = ['#2e2926','#20252e','#252e20','#2b2028','#202b2b','#2e2b20','#28202e','#202828'];
 
   // Pass 1: regular (background) slots
+  let slotIdx = 0;
   tpl.slots.forEach((sl, i) => {
     if (isOv(sl)) return;
     const sx=sl.x*tileSize, sy=sl.y*tileSize, sw=sl.w*tileSize, sh=sl.h*tileSize;
     const x0=sx+gap, y0=sy+gap, w0=sw-gap*2, h0=sh-gap*2;
-    // Clean consistent slot color — modern editorial look
-    ctx.fillStyle = '#1c1c1c';
+    ctx.fillStyle = PREV_FILLS[slotIdx % PREV_FILLS.length];
+    slotIdx++;
     ctx.fillRect(x0,y0,w0,h0);
   });
 
@@ -394,8 +404,8 @@ function startEditor(tpl) {
   const scrollEl = document.getElementById('editor-scroll');
   const availW = scrollEl.clientWidth  || window.innerWidth;
   const availH = (scrollEl.clientHeight || window.innerHeight) - 52;
-  // Scale by height only so each slide is tappable; wide templates scroll horizontally
-  viewScale = Math.min(1, (availH-32)/cvs.height);
+  // Fit all slides on screen so no slot is off-screen / unreachable
+  viewScale = Math.min(1, (availW-32)/cvs.width, (availH-32)/cvs.height);
   applyViewScale();
 
   // Editor scroll bg matches template mood
@@ -403,8 +413,14 @@ function startEditor(tpl) {
 
   renderEditor();
   if (!evBound) { bindEvents(); evBound = true; }
+  document.getElementById('zoom-ctrl').classList.add('show');
   goTo('editor');
-  showToast('點格子+ 新增照片 · 拖曳移動 · 雙指縮放');
+  showToast('點格子 + 新增照片 · 右下角 +/− 縮放');
+}
+
+function zoomEditor(dir) {
+  viewScale = Math.max(0.1, Math.min(3, viewScale * (dir > 0 ? 1.3 : 1/1.3)));
+  applyViewScale();
 }
 
 function applyViewScale() {
@@ -801,6 +817,10 @@ function showToast(msg){
   el.textContent=msg; el.classList.add('show');
   clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove('show'),3000);
 }
+
+// Prevent iOS Safari pinch-zoom from interfering with editor
+document.addEventListener('gesturestart',  e => e.preventDefault(), {passive:false});
+document.addEventListener('gesturechange', e => e.preventDefault(), {passive:false});
 
 buildGallery();
 goTo('gallery');
