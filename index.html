@@ -592,7 +592,7 @@ function drawOvSlot(ctx, sl, i, S, lightBg=false) {
     ctx.drawImage(img, -(dw/2)+ph.ox, -(dh/2)+ph.oy, dw, dh);
   } else {
     // Empty overlay slot: warm gray on light bg, dark gray on dark bg
-    ctx.fillStyle = isLightBg ? '#c8c3be' : '#2a2a2a';
+    ctx.fillStyle = lightBg ? '#c8c3be' : '#2a2a2a';
     ctx.fillRect(-iw/2,-ih/2,iw,ih);
     drawPlus(ctx, 0, 0, Math.min(iw,ih)*0.13, i===activeSlot);
   }
