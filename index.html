@@ -337,10 +337,9 @@ const TPLS = [
            {ov:true,cx:1.50,cy:0.54,w:0.50,h:0.50,rot:3,frame:1,shadow:true},
            {ov:true,cx:2.52,cy:0.46,w:0.50,h:0.50,rot:-4,frame:1,shadow:true}] },
 
-  // 上2下2四拼（各橫跨2格全景）+ 中央跨縫押圖，存4圖
-  { id:'sq12', cat:'grid', name:'四拼押圖', slides:4, photos:5,
-    slots:[{x:0,y:0,w:2,h:0.5},{x:2,y:0,w:2,h:0.5},
-           {x:0,y:0.5,w:2,h:0.5},{x:2,y:0.5,w:2,h:0.5},
+  // 上2下2各一張全格，存4圖，2×2預覽
+  { id:'sq12', cat:'grid', name:'四拼押圖', slides:4, photos:5, preview2x2:true,
+    slots:[{x:0,y:0,w:1,h:1},{x:1,y:0,w:1,h:1},{x:2,y:0,w:1,h:1},{x:3,y:0,w:1,h:1},
            {ov:true,cx:2.0,cy:0.5,w:0.52,h:0.52,rot:-4,frame:1,shadow:true}] },
 ];
 
@@ -446,14 +445,53 @@ function buildGallery() {
     // Always fit all slides across screen width — no scrolling
     const tileW = Math.min(Math.floor(screenW / tpl.slides), MAX_TILE);
     let dataURL = '', cardH = tileW;
-    try {
-      const tempCvs = document.createElement('canvas');
-      drawLayout(tempCvs, tpl, tileW, true);
-      cardH = Math.round(screenW * tempCvs.height / tempCvs.width);
-      dataURL = tempCvs.toDataURL('image/jpeg', 0.88);
-      tempCvs.width = tempCvs.height = 0;  // free iOS canvas memory
-    } catch(e) {
-      console.warn('preview render failed', tpl.id, e);
+
+    if (tpl.preview2x2) {
+      // Render a 2×2 grid preview using sample images
+      try {
+        const hw = Math.floor(screenW / 2);
+        const pCvs = document.createElement('canvas');
+        pCvs.width = hw * 2; pCvs.height = hw * 2;
+        const pCtx = pCvs.getContext('2d');
+        pCtx.fillStyle = '#111'; pCtx.fillRect(0, 0, hw*2, hw*2);
+        [[0,0],[1,0],[0,1],[1,1]].forEach(([col, row], i) => {
+          const img = sampleImgs[i % sampleImgs.length];
+          const bx = col*hw, by = row*hw;
+          if (img) {
+            pCtx.save(); pCtx.beginPath(); pCtx.rect(bx+1, by+1, hw-2, hw-2); pCtx.clip();
+            const s = Math.min(img.naturalWidth, img.naturalHeight);
+            pCtx.drawImage(img, (img.naturalWidth-s)/2, (img.naturalHeight-s)/2, s, s, bx+1, by+1, hw-2, hw-2);
+            pCtx.restore();
+          }
+        });
+        pCtx.strokeStyle = 'rgba(255,255,255,.2)'; pCtx.lineWidth = 2;
+        pCtx.beginPath(); pCtx.moveTo(hw, 0); pCtx.lineTo(hw, hw*2); pCtx.stroke();
+        pCtx.beginPath(); pCtx.moveTo(0, hw); pCtx.lineTo(hw*2, hw); pCtx.stroke();
+        // Overlay at center
+        const ov5 = sampleImgs[4 % sampleImgs.length];
+        const ow = hw * 0.52;
+        pCtx.save(); pCtx.translate(hw, hw); pCtx.rotate(-4*Math.PI/180);
+        pCtx.shadowColor='rgba(0,0,0,.5)'; pCtx.shadowBlur=10;
+        pCtx.fillStyle='#f0f0f0'; pCtx.fillRect(-ow/2,-ow/2,ow,ow);
+        pCtx.shadowBlur=0;
+        if (ov5) { pCtx.save(); pCtx.beginPath(); pCtx.rect(-ow/2+3,-ow/2+3,ow-6,ow-6); pCtx.clip();
+          const s=Math.min(ov5.naturalWidth,ov5.naturalHeight);
+          pCtx.drawImage(ov5,(ov5.naturalWidth-s)/2,(ov5.naturalHeight-s)/2,s,s,-ow/2+3,-ow/2+3,ow-6,ow-6); pCtx.restore(); }
+        pCtx.restore();
+        cardH = hw * 2;
+        dataURL = pCvs.toDataURL('image/jpeg', 0.88);
+        pCvs.width = pCvs.height = 0;
+      } catch(e) { console.warn('preview2x2 render failed', tpl.id, e); }
+    } else {
+      try {
+        const tempCvs = document.createElement('canvas');
+        drawLayout(tempCvs, tpl, tileW, true);
+        cardH = Math.round(screenW * tempCvs.height / tempCvs.width);
+        dataURL = tempCvs.toDataURL('image/jpeg', 0.88);
+        tempCvs.width = tempCvs.height = 0;  // free iOS canvas memory
+      } catch(e) {
+        console.warn('preview render failed', tpl.id, e);
+      }
     }
 
     card.style.height = cardH + 'px';
