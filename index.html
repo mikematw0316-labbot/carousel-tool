@@ -133,15 +133,12 @@ const TPLS = [
   { id:'por1', cat:'portrait', name:'雙直全景', slides:2, photos:1, aspect:1.25,
     slots:[{x:0,y:0,w:2,h:1}] },
 
-  { id:'por4', cat:'portrait', name:'四直全景', slides:4, photos:1, aspect:1.25,
-    slots:[{x:0,y:0,w:4,h:1}] },
-
   // 三格錯位 — alternating up/down
   { id:'por6', cat:'portrait', name:'三直錯位', slides:3, photos:3, aspect:1.25,
     slots:[{x:0,y:0,w:1,h:0.84},{x:1,y:0.16,w:1,h:0.84},{x:2,y:0,w:1,h:0.84}] },
 
-  // 四格錯位 — alternating up/down
-  { id:'por6b', cat:'portrait', name:'四直錯位', slides:4, photos:4, aspect:1.25,
+  // 四格錯位 — aspect 1.5 (3:2 portrait) to match reference
+  { id:'por6b', cat:'portrait', name:'四直錯位', slides:4, photos:4, aspect:1.5,
     slots:[{x:0,y:0,w:1,h:0.84},{x:1,y:0.16,w:1,h:0.84},{x:2,y:0,w:1,h:0.84},{x:3,y:0.16,w:1,h:0.84}] },
 
   // 圖押圖 — two backgrounds, portrait overlay straddling boundary
