@@ -344,22 +344,22 @@ const TPLS = [
            {x:1.5,y:0.5,w:1.5,h:0.5},
            {ov:true,cx:1.5,cy:0.75,w:0.54,h:0.54,rot:3,frame:1,shadow:true}] },
 
-  // 上2下3 — 上方左大右小，下方三等份，1:2直式
+  // 上2下3 — 上方兩等份（各1.5格，切線對齊下3中心），下方三等份，1:2直式
   { id:'sq16', cat:'grid', name:'上2下3', slides:3, photos:5, aspect:2, noDividers:true,
-    slots:[{x:0,y:0,w:2,h:0.5},
-           {x:2,y:0,w:1,h:0.5},
+    slots:[{x:0,y:0,w:1.5,h:0.5},
+           {x:1.5,y:0,w:1.5,h:0.5},
            {x:0,y:0.5,w:1,h:0.5},
            {x:1,y:0.5,w:1,h:0.5},
            {x:2,y:0.5,w:1,h:0.5}] },
 
-  // 上2下3押圖 — 押圖在左上與下排的交匯處
+  // 上2下3押圖 — 押圖在上2兩圖的縫線中央
   { id:'sq17', cat:'grid', name:'上2下3押圖', slides:3, photos:6, aspect:2, noDividers:true,
-    slots:[{x:0,y:0,w:2,h:0.5},
-           {x:2,y:0,w:1,h:0.5},
+    slots:[{x:0,y:0,w:1.5,h:0.5},
+           {x:1.5,y:0,w:1.5,h:0.5},
            {x:0,y:0.5,w:1,h:0.5},
            {x:1,y:0.5,w:1,h:0.5},
            {x:2,y:0.5,w:1,h:0.5},
-           {ov:true,cx:1.0,cy:0.5,w:0.54,h:0.54,rot:-4,frame:1,shadow:true}] },
+           {ov:true,cx:1.5,cy:0.25,w:0.54,h:0.54,rot:-4,frame:1,shadow:true}] },
 ];
 
 // Preview slot colours — muted tones that look good in gallery
