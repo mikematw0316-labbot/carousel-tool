@@ -266,8 +266,9 @@ const TPLS = [
   { id:'por4', cat:'portrait', name:'四直全景', slides:4, photos:1, aspect:1.92, exportW:1000, exportH:1920,
     slots:[{x:0,y:0,w:4,h:1}] },
 
-  // 四格錯位 — 1000×1920，全幅（FB版型，不需黑色錯位）
+  // 四格錯位 — 1000×1920，全幅匯出（FB版型自動錯位），預覽顯示黑邊錯位效果
   { id:'por6b', cat:'portrait', name:'四直錯位', slides:4, photos:4, aspect:1.92, exportW:1000, exportH:1920,
+    previewSlots:[{x:0,y:0,w:1,h:0.84},{x:1,y:0.16,w:1,h:0.84},{x:2,y:0,w:1,h:0.84},{x:3,y:0.16,w:1,h:0.84}],
     slots:[{x:0,y:0,w:1,h:1},{x:1,y:0,w:1,h:1},{x:2,y:0,w:1,h:1},{x:3,y:0,w:1,h:1}] },
 
   // 四直押圖 — 全幅底圖 + 兩張押圖跨縫
@@ -544,8 +545,9 @@ function drawLayout(canvas, tpl, tileSize, gradient) {
 
   // Pass 1: regular (background) slots
   // x/w in slide-width units; y/h in slide-height units
+  const previewSrc = tpl.previewSlots || tpl.slots;
   let slotIdx = 0;
-  tpl.slots.forEach((sl, i) => {
+  previewSrc.forEach((sl, i) => {
     if (isOv(sl)) return;
     const sx=sl.x*tileSize, sy=sl.y*H, sw=sl.w*tileSize, sh=sl.h*H;
     const x0=sx+gap, y0=sy+gap, w0=sw-gap*2, h0=sh-gap*2;
@@ -574,9 +576,9 @@ function drawLayout(canvas, tpl, tileSize, gradient) {
   }
 
   // Pass 2: overlay slots — count regular slots to continue photo index
-  const regCount = tpl.slots.filter(s => !isOv(s)).length;
+  const regCount = previewSrc.filter(s => !isOv(s)).length;
   let ovIdx = regCount;
-  tpl.slots.forEach((sl, i) => {
+  previewSrc.forEach((sl, i) => {
     if (!isOv(sl)) return;
     drawOvPreview(ctx, sl, tileSize, H, sampleImgs[ovIdx % sampleImgs.length] || null);
     ovIdx++;
