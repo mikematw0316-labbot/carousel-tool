@@ -258,27 +258,27 @@ const TPLS = [
   { id:'por1', cat:'portrait', name:'雙直全景', slides:2, photos:1, aspect:1.25,
     slots:[{x:0,y:0,w:2,h:1}] },
 
-  // 三格錯位 — alternating up/down
-  { id:'por6', cat:'portrait', name:'三直錯位', slides:3, photos:3, aspect:1.25,
+  // 三格錯位 — alternating up/down, black bg for stagger effect
+  { id:'por6', cat:'portrait', name:'三直錯位', slides:3, photos:3, aspect:1.25, blackBg:true,
     slots:[{x:0,y:0,w:1,h:0.84},{x:1,y:0.16,w:1,h:0.84},{x:2,y:0,w:1,h:0.84}] },
 
   // 四直全景 — 一圖四格，1000×1920
   { id:'por4', cat:'portrait', name:'四直全景', slides:4, photos:1, aspect:1.92, exportW:1000, exportH:1920,
     slots:[{x:0,y:0,w:4,h:1}] },
 
-  // 四格錯位 — 1000×1920，交替上下錯位
+  // 四格錯位 — 1000×1920，全幅（FB版型，不需黑色錯位）
   { id:'por6b', cat:'portrait', name:'四直錯位', slides:4, photos:4, aspect:1.92, exportW:1000, exportH:1920,
-    slots:[{x:0,y:0,w:1,h:0.84},{x:1,y:0.16,w:1,h:0.84},{x:2,y:0,w:1,h:0.84},{x:3,y:0.16,w:1,h:0.84}] },
+    slots:[{x:0,y:0,w:1,h:1},{x:1,y:0,w:1,h:1},{x:2,y:0,w:1,h:1},{x:3,y:0,w:1,h:1}] },
 
-  // 四直押圖 — 錯位底圖 + 兩張押圖跨縫
+  // 四直押圖 — 全幅底圖 + 兩張押圖跨縫
   { id:'por7', cat:'portrait', name:'四直押圖', slides:4, photos:6, aspect:1.92, exportW:1000, exportH:1920,
-    slots:[{x:0,y:0,w:1,h:0.84},{x:1,y:0.16,w:1,h:0.84},{x:2,y:0,w:1,h:0.84},{x:3,y:0.16,w:1,h:0.84},
+    slots:[{x:0,y:0,w:1,h:1},{x:1,y:0,w:1,h:1},{x:2,y:0,w:1,h:1},{x:3,y:0,w:1,h:1},
            {ov:true,cx:1.0,cy:0.4,w:0.52,h:0.6,rot:-5,frame:1,shadow:true},
            {ov:true,cx:3.0,cy:0.6,w:0.52,h:0.6,rot:5,frame:1,shadow:true}] },
 
-  // 四直押圖2 — 錯位底圖 + 三張押圖（兩側縫 + 中央）
+  // 四直押圖2 — 全幅底圖 + 三張押圖（兩側縫 + 中央）
   { id:'por7b', cat:'portrait', name:'四直押圖2', slides:4, photos:7, aspect:1.92, exportW:1000, exportH:1920,
-    slots:[{x:0,y:0,w:1,h:0.84},{x:1,y:0.16,w:1,h:0.84},{x:2,y:0,w:1,h:0.84},{x:3,y:0.16,w:1,h:0.84},
+    slots:[{x:0,y:0,w:1,h:1},{x:1,y:0,w:1,h:1},{x:2,y:0,w:1,h:1},{x:3,y:0,w:1,h:1},
            {ov:true,cx:1.0,cy:0.38,w:0.52,h:0.6,rot:-5,frame:1,shadow:true},
            {ov:true,cx:2.0,cy:0.5,w:0.52,h:0.6,rot:3,frame:1,shadow:true},
            {ov:true,cx:3.0,cy:0.62,w:0.52,h:0.6,rot:5,frame:1,shadow:true}] },
@@ -288,8 +288,8 @@ const TPLS = [
     slots:[{x:0,y:0,w:1,h:1},{x:1,y:0,w:1,h:1},
            {ov:true,cx:1.0,cy:0.5,w:0.56,h:0.68,rot:-5,frame:1,shadow:true}] },
 
-  // 錯位 + 圖押圖
-  { id:'por9', cat:'portrait', name:'錯位押圖', slides:2, photos:3, aspect:1.25,
+  // 錯位 + 圖押圖，black bg for stagger effect
+  { id:'por9', cat:'portrait', name:'錯位押圖', slides:2, photos:3, aspect:1.25, blackBg:true,
     slots:[{x:0,y:0,w:1,h:0.84},{x:1,y:0.16,w:1,h:0.84},
            {ov:true,cx:1.0,cy:0.5,w:0.56,h:0.68,rot:5,frame:1,shadow:true}] },
 
@@ -678,7 +678,7 @@ function renderEditor() {
 
   if (tpl.preview2x2) {
     const H2 = 2*S;
-    ctx.fillStyle = '#111'; ctx.fillRect(0, 0, 2*S, H2);
+    ctx.fillStyle = tpl.bg||(tpl.blackBg?'#000':'#111'); ctx.fillRect(0, 0, 2*S, H2);
     // Pass 1: 2×2 regular slots (index 0=TL,1=TR,2=BL,3=BR)
     tpl.slots.forEach((sl, i) => {
       if (isOv(sl)) return;
@@ -718,7 +718,7 @@ function renderEditor() {
   const H = Math.round(S * (tpl.aspect || 1));
 
   const isLightBg = !!tpl.bg;
-  ctx.fillStyle = tpl.bg || '#111';
+  ctx.fillStyle = tpl.bg || (tpl.blackBg ? '#000' : '#111');
   ctx.fillRect(0,0,cvs.width,cvs.height);
 
   // Subtle vignette for cream/paper bg in editor
@@ -1370,7 +1370,7 @@ async function saveAll() {
     const off=document.createElement('canvas');
     off.width=EP; off.height=EPH;
     const ctx=off.getContext('2d');
-    ctx.fillStyle=tpl.bg||'#111'; ctx.fillRect(0,0,EP,EPH);
+    ctx.fillStyle=tpl.bg||(tpl.blackBg?'#000':'#111'); ctx.fillRect(0,0,EP,EPH);
 
     // Pass 1: regular slots (x/w in slide-width units; y/h in slide-height units)
     tpl.slots.forEach((sl,i)=>{
