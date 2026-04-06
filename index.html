@@ -330,19 +330,19 @@ const TPLS = [
            {x:0,y:0.5,w:1.5,h:0.5},
            {x:1.5,y:0.5,w:1.5,h:0.5}] },
 
-  // 上1下2押圖（押圖在三圖交匯處）
+  // 上1下2押圖（圓形押圖在三圖交匯處）
   { id:'sq14',  cat:'grid', name:'上1下2押圖', slides:3, photos:4, aspect:2, fb:true,
     slots:[{x:0,y:0,w:3,h:0.5},
            {x:0,y:0.5,w:1.5,h:0.5},
            {x:1.5,y:0.5,w:1.5,h:0.5},
-           {ov:true,cx:1.5,cy:0.5,w:0.54,h:0.27,rot:-3,frame:1,shadow:true}] },
+           {ov:true,cx:1.5,cy:0.5,w:0.54,h:0.27,circle:true,shadow:true}] },
 
-  // 上1下2押圖2（押圖在下兩張中間）
+  // 上1下2押圖2（押圖在下兩張中間，高度x2）
   { id:'sq15',  cat:'grid', name:'上1下2押圖2', slides:3, photos:4, aspect:2, fb:true,
     slots:[{x:0,y:0,w:3,h:0.5},
            {x:0,y:0.5,w:1.5,h:0.5},
            {x:1.5,y:0.5,w:1.5,h:0.5},
-           {ov:true,cx:1.5,cy:0.75,w:0.54,h:0.27,rot:3,frame:1,shadow:true}] },
+           {ov:true,cx:1.5,cy:0.75,w:0.54,h:0.54,rot:3,frame:1,shadow:true}] },
 ];
 
 // Preview slot colours — muted tones that look good in gallery
@@ -605,9 +605,17 @@ function drawOvPreview(ctx, sl, tileSize, H, sImg) {
     ctx.shadowColor='transparent'; ctx.shadowBlur=0;
   }
   const iw=w-fw*2, ih=h-fw*2;
+  const r=Math.min(iw,ih)/2;
+  if (sl.circle && fw>0) {
+    ctx.fillStyle = OV_FRM_COLOR;
+    ctx.shadowColor='transparent'; ctx.shadowBlur=0;
+    ctx.beginPath(); ctx.arc(0,0,r+fw,0,Math.PI*2); ctx.fill();
+  }
   if (sImg && sImg.naturalWidth) {
     ctx.save();
-    ctx.beginPath(); ctx.rect(-iw/2,-ih/2,iw,ih); ctx.clip();
+    ctx.beginPath();
+    if (sl.circle) { ctx.arc(0,0,r,0,Math.PI*2); } else { ctx.rect(-iw/2,-ih/2,iw,ih); }
+    ctx.clip();
     const pAR = sImg.naturalWidth/sImg.naturalHeight, sAR = iw/ih;
     let dw, dh;
     if (pAR > sAR) { dh=ih; dw=dh*pAR; } else { dw=iw; dh=dw/pAR; }
@@ -617,7 +625,8 @@ function drawOvPreview(ctx, sl, tileSize, H, sImg) {
     const og = ctx.createLinearGradient(-iw/2,-ih/2,iw/2,ih/2);
     og.addColorStop(0,'#e0b088'); og.addColorStop(1,'#986048');
     ctx.fillStyle = og;
-    ctx.fillRect(-iw/2,-ih/2,iw,ih);
+    ctx.beginPath();
+    if (sl.circle) { ctx.arc(0,0,r,0,Math.PI*2); ctx.fill(); } else { ctx.fillRect(-iw/2,-ih/2,iw,ih); }
   }
   ctx.restore();
 }
@@ -818,13 +827,18 @@ function drawOvSlot(ctx, sl, i, S, H, lightBg=false) {
     ctx.shadowColor='rgba(0,0,0,.5)'; ctx.shadowBlur=14; ctx.shadowOffsetX=3; ctx.shadowOffsetY=4;
   }
   if (fw>0) {
-    ctx.fillStyle='#f0f0f0'; ctx.fillRect(-w/2,-h/2,w,h);
+    ctx.fillStyle='#f0f0f0';
+    if (sl.circle) { const r=Math.min(w,h)/2; ctx.beginPath(); ctx.arc(0,0,r,0,Math.PI*2); ctx.fill(); }
+    else { ctx.fillRect(-w/2,-h/2,w,h); }
     ctx.shadowColor='transparent'; ctx.shadowBlur=0;
   }
 
   const iw=w-fw*2, ih=h-fw*2;
+  const r=Math.min(iw,ih)/2;
   ctx.save();
-  ctx.beginPath(); ctx.rect(-iw/2,-ih/2,iw,ih); ctx.clip();
+  ctx.beginPath();
+  if (sl.circle) { ctx.arc(0,0,r,0,Math.PI*2); } else { ctx.rect(-iw/2,-ih/2,iw,ih); }
+  ctx.clip();
 
   if (ph&&ph.img) {
     const img=ph.img;
@@ -833,16 +847,17 @@ function drawOvSlot(ctx, sl, i, S, H, lightBg=false) {
     if(AR>sAR){dh=ih*ph.scale;dw=dh*AR;}else{dw=iw*ph.scale;dh=dw/AR;}
     ctx.drawImage(img, -(dw/2)+ph.ox, -(dh/2)+ph.oy, dw, dh);
   } else {
-    // Empty overlay slot: warm gray on light bg, dark gray on dark bg
     ctx.fillStyle = lightBg ? '#c8c3be' : '#2a2a2a';
-    ctx.fillRect(-iw/2,-ih/2,iw,ih);
-    drawPlus(ctx, 0, 0, Math.min(iw,ih)*0.13, i===activeSlot);
+    if (sl.circle) { ctx.beginPath(); ctx.arc(0,0,r,0,Math.PI*2); ctx.fill(); }
+    else { ctx.fillRect(-iw/2,-ih/2,iw,ih); }
+    drawPlus(ctx, 0, 0, r*0.26, i===activeSlot);
   }
   ctx.restore();
 
   if (i===activeSlot) {
     ctx.strokeStyle='#0095f6'; ctx.lineWidth=2.5;
-    ctx.strokeRect(-iw/2+1,-ih/2+1,iw-2,ih-2);
+    if (sl.circle) { ctx.beginPath(); ctx.arc(0,0,r,0,Math.PI*2); ctx.stroke(); }
+    else { ctx.strokeRect(-iw/2+1,-ih/2+1,iw-2,ih-2); }
   }
   ctx.restore();
 }
@@ -1423,22 +1438,23 @@ async function saveAll() {
         ctx.shadowColor='rgba(0,0,0,.45)'; ctx.shadowBlur=28; ctx.shadowOffsetX=6; ctx.shadowOffsetY=8;
       }
       if(fw>0){
-        ctx.fillStyle='#f0f0f0'; ctx.fillRect(-w/2,-h/2,w,h);
+        ctx.fillStyle='#f0f0f0';
+        if(sl.circle){const rc=Math.min(w,h)/2;ctx.beginPath();ctx.arc(0,0,rc,0,Math.PI*2);ctx.fill();}
+        else{ctx.fillRect(-w/2,-h/2,w,h);}
         ctx.shadowColor='transparent'; ctx.shadowBlur=0;
       }
       const iw=w-fw*2, ih=h-fw*2;
+      const rc=Math.min(iw,ih)/2;
       ctx.save();
-      ctx.beginPath(); ctx.rect(-iw/2,-ih/2,iw,ih); ctx.clip();
-      if(ph&&ph.img){
-        const img=ph.img;
-        const AR=img.naturalWidth/img.naturalHeight, sAR=iw/ih;
-        let dw,dh;
-        if(AR>sAR){dh=ih*ph.scale;dw=dh*AR;}else{dw=iw*ph.scale;dh=dw/AR;}
-        const ox=ph.ox*ratio, oy=ph.oy*ratio;
-        ctx.drawImage(img, -(dw/2)+ox, -(dh/2)+oy, dw, dh);
-      } else {
-        ctx.fillStyle='#2a2a2a'; ctx.fillRect(-iw/2,-ih/2,iw,ih);
-      }
+      ctx.beginPath();
+      if(sl.circle){ctx.arc(0,0,rc,0,Math.PI*2);}else{ctx.rect(-iw/2,-ih/2,iw,ih);}
+      ctx.clip();
+      const img=ph.img;
+      const AR=img.naturalWidth/img.naturalHeight, sAR=iw/ih;
+      let dw,dh;
+      if(AR>sAR){dh=ih*ph.scale;dw=dh*AR;}else{dw=iw*ph.scale;dh=dw/AR;}
+      const ox=ph.ox*ratio, oy=ph.oy*ratio;
+      ctx.drawImage(img, -(dw/2)+ox, -(dh/2)+oy, dw, dh);
       ctx.restore(); ctx.restore();
     });
 
