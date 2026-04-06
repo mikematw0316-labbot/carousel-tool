@@ -201,11 +201,10 @@ const TPLS = [
            {ov:true,cx:1.50,cy:0.54,w:0.50,h:0.50,rot:3,frame:1,shadow:true},
            {ov:true,cx:2.52,cy:0.46,w:0.50,h:0.50,rot:-4,frame:1,shadow:true}] },
 
-  // 2×2四拼 + 中央押圖（押圖縮小50%）
-  { id:'sq12', cat:'grid', name:'四拼押圖', slides:1, photos:5,
-    slots:[{x:0,y:0,w:0.5,h:0.5},{x:0.5,y:0,w:0.5,h:0.5},
-           {x:0,y:0.5,w:0.5,h:0.5},{x:0.5,y:0.5,w:0.5,h:0.5},
-           {ov:true,cx:0.5,cy:0.5,w:0.25,h:0.25,rot:-4,frame:1,shadow:true}] },
+  // 4格各一張背景 + 第2-3格之間押圖
+  { id:'sq12', cat:'grid', name:'四拼押圖', slides:4, photos:5,
+    slots:[{x:0,y:0,w:1,h:1},{x:1,y:0,w:1,h:1},{x:2,y:0,w:1,h:1},{x:3,y:0,w:1,h:1},
+           {ov:true,cx:2.0,cy:0.5,w:0.52,h:0.52,rot:-4,frame:1,shadow:true}] },
 ];
 
 // Preview slot colours — muted tones that look good in gallery
