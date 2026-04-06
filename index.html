@@ -285,6 +285,13 @@ const LOGICAL_S = 300;
 let viewScale = 1;
 const EXPORT_PX = 1080;
 
+// ── Sample photos (preloaded for gallery previews) ─────
+const SAMPLE_URLS = [
+  'photos/p1.jpg','photos/p2.jpg','photos/p3.jpg','photos/p4.jpg',
+  'photos/p5.jpg','photos/p6.jpg','photos/p7.jpg','photos/p8.jpg',
+];
+let sampleImgs = [];  // filled after load
+
 // ── Nav ───────────────────────────────────────────────
 function goTo(id) {
   const order = ['gallery','editor'];
@@ -414,12 +421,23 @@ function drawLayout(canvas, tpl, tileSize, gradient) {
     if (isOv(sl)) return;
     const sx=sl.x*tileSize, sy=sl.y*tileSize, sw=sl.w*tileSize, sh=sl.h*tileSize;
     const x0=sx+gap, y0=sy+gap, w0=sw-gap*2, h0=sh-gap*2;
-    const mood = PHOTO_MOODS[slotIdx % PHOTO_MOODS.length];
+    const sImg = sampleImgs[slotIdx % sampleImgs.length];
     slotIdx++;
-    const g = ctx.createLinearGradient(x0, y0, x0+w0, y0+h0);
-    g.addColorStop(0, mood[0]); g.addColorStop(1, mood[1]);
-    ctx.fillStyle = g;
-    ctx.fillRect(x0,y0,w0,h0);
+    if (sImg && sImg.naturalWidth) {
+      // Draw sample photo cover-fit into slot
+      ctx.save();
+      ctx.beginPath(); ctx.rect(x0, y0, w0, h0); ctx.clip();
+      const pAR = sImg.naturalWidth / sImg.naturalHeight, sAR = w0 / h0;
+      let dw, dh;
+      if (pAR > sAR) { dh = h0; dw = dh * pAR; } else { dw = w0; dh = dw / pAR; }
+      ctx.drawImage(sImg, x0 + (w0-dw)/2, y0 + (h0-dh)/2, dw, dh);
+      ctx.restore();
+    } else {
+      const mood = PHOTO_MOODS[slotIdx % PHOTO_MOODS.length];
+      const g = ctx.createLinearGradient(x0, y0, x0+w0, y0+h0);
+      g.addColorStop(0, mood[0]); g.addColorStop(1, mood[1]);
+      ctx.fillStyle = g; ctx.fillRect(x0,y0,w0,h0);
+    }
   });
 
   // Subtle vignette for cream/paper backgrounds
@@ -438,14 +456,17 @@ function drawLayout(canvas, tpl, tileSize, gradient) {
     ctx.beginPath(); ctx.moveTo(i*tileSize,0); ctx.lineTo(i*tileSize,H); ctx.stroke();
   }
 
-  // Pass 2: overlay slots
+  // Pass 2: overlay slots — count regular slots to continue photo index
+  const regCount = tpl.slots.filter(s => !isOv(s)).length;
+  let ovIdx = regCount;
   tpl.slots.forEach((sl, i) => {
     if (!isOv(sl)) return;
-    drawOvPreview(ctx, sl, tileSize);
+    drawOvPreview(ctx, sl, tileSize, sampleImgs[ovIdx % sampleImgs.length] || null);
+    ovIdx++;
   });
 }
 
-function drawOvPreview(ctx, sl, tileSize) {
+function drawOvPreview(ctx, sl, tileSize, sImg) {
   const cx=sl.cx*tileSize, cy=sl.cy*tileSize;
   const w=sl.w*tileSize, h=sl.h*tileSize;
   const rot=(sl.rot||0)*Math.PI/180;
@@ -459,16 +480,25 @@ function drawOvPreview(ctx, sl, tileSize) {
     ctx.shadowColor='rgba(0,0,0,.4)'; ctx.shadowBlur=8; ctx.shadowOffsetX=2; ctx.shadowOffsetY=3;
   }
   if (fw>0) {
-    ctx.fillStyle = OV_FRM_COLOR;  // pure white Polaroid frame
+    ctx.fillStyle = OV_FRM_COLOR;
     ctx.fillRect(-w/2,-h/2,w,h);
     ctx.shadowColor='transparent'; ctx.shadowBlur=0;
   }
   const iw=w-fw*2, ih=h-fw*2;
-  // Warm portrait gradient for overlay photo placeholder
-  const og = ctx.createLinearGradient(-iw/2,-ih/2,iw/2,ih/2);
-  og.addColorStop(0,'#e0b088'); og.addColorStop(1,'#986048');
-  ctx.fillStyle = og;
-  ctx.fillRect(-iw/2,-ih/2,iw,ih);
+  if (sImg && sImg.naturalWidth) {
+    ctx.save();
+    ctx.beginPath(); ctx.rect(-iw/2,-ih/2,iw,ih); ctx.clip();
+    const pAR = sImg.naturalWidth/sImg.naturalHeight, sAR = iw/ih;
+    let dw, dh;
+    if (pAR > sAR) { dh=ih; dw=dh*pAR; } else { dw=iw; dh=dw/pAR; }
+    ctx.drawImage(sImg, -dw/2, -dh/2, dw, dh);
+    ctx.restore();
+  } else {
+    const og = ctx.createLinearGradient(-iw/2,-ih/2,iw/2,ih/2);
+    og.addColorStop(0,'#e0b088'); og.addColorStop(1,'#986048');
+    ctx.fillStyle = og;
+    ctx.fillRect(-iw/2,-ih/2,iw,ih);
+  }
   ctx.restore();
 }
 
@@ -913,8 +943,22 @@ function showToast(msg){
 document.addEventListener('gesturestart',  e => e.preventDefault(), {passive:false});
 document.addEventListener('gesturechange', e => e.preventDefault(), {passive:false});
 
-buildGallery();
+// Preload sample photos, then build gallery (fallback to gradients if load fails)
 goTo('gallery');
+let loadedCount = 0;
+SAMPLE_URLS.forEach((url, i) => {
+  const img = new Image();
+  img.onload = () => {
+    sampleImgs[i] = img;
+    loadedCount++;
+    if (loadedCount === SAMPLE_URLS.length) buildGallery();
+  };
+  img.onerror = () => {
+    loadedCount++;
+    if (loadedCount === SAMPLE_URLS.length) buildGallery();
+  };
+  img.src = url;
+});
 </script>
 </body>
 </html>
