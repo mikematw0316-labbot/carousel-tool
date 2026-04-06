@@ -614,6 +614,10 @@ function startEditor(tpl) {
   activeSlot = -1;
   textLayers = []; activeTextId = null;
   document.getElementById('editor-title').textContent = tpl.name;
+  const hasOv = tpl.slots.some(s => isOv(s));
+  document.getElementById('editor-hint').textContent = hasOv
+    ? '點格子新增照片 · 右下角 +/− 縮放 · 押圖區塊可不放圖片'
+    : '點格子新增照片 · 右下角 +/− 縮放';
 
   const cvs = document.getElementById('editor-canvas');
   if (tpl.preview2x2) {
