@@ -337,9 +337,10 @@ const TPLS = [
            {ov:true,cx:1.50,cy:0.54,w:0.50,h:0.50,rot:3,frame:1,shadow:true},
            {ov:true,cx:2.52,cy:0.46,w:0.50,h:0.50,rot:-4,frame:1,shadow:true}] },
 
-  // 四格各一張 + 跨縫中央押圖
+  // 上2下2四拼（各橫跨2格全景）+ 中央跨縫押圖，存4圖
   { id:'sq12', cat:'grid', name:'四拼押圖', slides:4, photos:5,
-    slots:[{x:0,y:0,w:1,h:1},{x:1,y:0,w:1,h:1},{x:2,y:0,w:1,h:1},{x:3,y:0,w:1,h:1},
+    slots:[{x:0,y:0,w:2,h:0.5},{x:2,y:0,w:2,h:0.5},
+           {x:0,y:0.5,w:2,h:0.5},{x:2,y:0.5,w:2,h:0.5},
            {ov:true,cx:2.0,cy:0.5,w:0.52,h:0.52,rot:-4,frame:1,shadow:true}] },
 ];
 
