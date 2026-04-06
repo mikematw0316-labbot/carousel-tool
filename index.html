@@ -288,7 +288,7 @@ const TPLS = [
            {ov:true,cx:1.0,cy:0.5,w:0.56,h:0.68,rot:-5,frame:1,shadow:true}] },
 
   // 錯位 + 圖押圖，black bg for stagger effect
-  { id:'por9', cat:'grid', name:'錯位押圖', slides:2, photos:3, aspect:1.25, blackBg:true,
+  { id:'por9', cat:'portrait', name:'錯位押圖', slides:2, photos:3, aspect:1.25, blackBg:true,
     slots:[{x:0,y:0,w:1,h:0.84},{x:1,y:0.16,w:1,h:0.84},
            {ov:true,cx:1.0,cy:0.5,w:0.56,h:0.68,rot:5,frame:1,shadow:true}] },
 
@@ -298,7 +298,7 @@ const TPLS = [
            {ov:true,cx:1.0,cy:0.5,w:0.56,h:0.68,rot:3,frame:1,shadow:true}] },
 
   // 兩背景 + 兩個押圖，對角交叉
-  { id:'por11', cat:'grid', name:'雙押交叉', slides:2, photos:4, aspect:1.25,
+  { id:'por11', cat:'portrait', name:'雙押交叉', slides:2, photos:4, aspect:1.25,
     slots:[{x:0,y:0,w:1,h:1},{x:1,y:0,w:1,h:1},
            {ov:true,cx:0.42,cy:0.64,w:0.52,h:0.62,rot:-4,frame:1,shadow:true},
            {ov:true,cx:1.58,cy:0.36,w:0.52,h:0.62,rot:4,frame:1,shadow:true}] },
@@ -310,8 +310,12 @@ const TPLS = [
 
 
   // 左大右雙
-  { id:'sq7', cat:'grid', name:'左大右雙', slides:2, photos:3,
+  { id:'sq7', cat:'portrait', name:'左大右雙', slides:2, photos:3,
     slots:[{x:0,y:0,w:1,h:1},{x:1,y:0,w:1,h:0.5},{x:1,y:0.5,w:1,h:0.5}] },
+
+  // 左雙右大（左大右雙鏡像）
+  { id:'por12', cat:'portrait', name:'左雙右大', slides:2, photos:3,
+    slots:[{x:0,y:0,w:1,h:0.5},{x:0,y:0.5,w:1,h:0.5},{x:1,y:0,w:1,h:1}] },
 
   // 單格 + 押圖
   { id:'sq8', cat:'grid', name:'單格押圖', slides:1, photos:2,
@@ -319,12 +323,12 @@ const TPLS = [
            {ov:true,cx:0.5,cy:0.5,w:0.55,h:0.55,rot:-5,frame:1,shadow:true}] },
 
   // 雙格 + 押圖跨縫
-  { id:'sq9', cat:'grid', name:'雙格押圖', slides:2, photos:3,
+  { id:'sq9', cat:'portrait', name:'雙格押圖', slides:2, photos:3,
     slots:[{x:0,y:0,w:1,h:1},{x:1,y:0,w:1,h:1},
            {ov:true,cx:1.0,cy:0.5,w:0.54,h:0.54,rot:5,frame:1,shadow:true}] },
 
   // 全景底景 + 雙押圖
-  { id:'sq10', cat:'grid', name:'底景雙押', slides:2, photos:3,
+  { id:'sq10', cat:'portrait', name:'底景雙押', slides:2, photos:3,
     slots:[{x:0,y:0,w:2,h:1},
            {ov:true,cx:0.45,cy:0.48,w:0.52,h:0.52,rot:-5,frame:1,shadow:true},
            {ov:true,cx:1.55,cy:0.52,w:0.52,h:0.52,rot:4,frame:1,shadow:true}] },
