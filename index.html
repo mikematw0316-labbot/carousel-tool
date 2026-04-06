@@ -730,7 +730,8 @@ function renderEditor() {
   }
 
   // Pass 1: regular slots (x/w in slide-width units; y/h in slide-height units)
-  tpl.slots.forEach((sl, i) => {
+  const editorSrc = tpl.previewSlots || tpl.slots;
+  editorSrc.forEach((sl, i) => {
     if (isOv(sl)) return;
     const sx=sl.x*S, sy=sl.y*H, sw=sl.w*S, sh=sl.h*H;
     const x0=sx+G, y0=sy+G, w0=sw-G*2, h0=sh-G*2;
@@ -763,7 +764,7 @@ function renderEditor() {
   }
 
   // Pass 2: overlay slots (on top)
-  tpl.slots.forEach((sl, i) => {
+  editorSrc.forEach((sl, i) => {
     if (!isOv(sl)) return;
     drawOvSlot(ctx, sl, i, S, H, isLightBg);
   });
@@ -843,7 +844,7 @@ function drawOvSlot(ctx, sl, i, S, H, lightBg=false) {
 let updateBtnSlot = -1;
 function showUpdateBtn(si) {
   updateBtnSlot = si;
-  const sl = curTpl.slots[si];
+  const sl = (curTpl.previewSlots || curTpl.slots)[si];
   const cvs = document.getElementById('editor-canvas');
   const rect = cvs.getBoundingClientRect();
   const S = LOGICAL_S;
@@ -880,17 +881,19 @@ function hitSlot(x, y) {
   const S = LOGICAL_S;
   const H = Math.round(S * (curTpl.aspect || 1));
 
+  const hitSrc = curTpl.previewSlots || curTpl.slots;
+
   if (curTpl.preview2x2) {
-    for (let i=curTpl.slots.length-1; i>=0; i--) {
-      const sl=curTpl.slots[i];
+    for (let i=hitSrc.length-1; i>=0; i--) {
+      const sl=hitSrc[i];
       if (!isOv(sl)) continue;
       const hw=sl.w*S/2, hh=sl.h*S/2;
       const ang=-(sl.rot||0)*Math.PI/180, dx=x-S, dy=y-S;
       const lx=dx*Math.cos(ang)-dy*Math.sin(ang), ly=dx*Math.sin(ang)+dy*Math.cos(ang);
       if(Math.abs(lx)<=hw && Math.abs(ly)<=hh) return i;
     }
-    for (let i=0; i<curTpl.slots.length; i++) {
-      const sl=curTpl.slots[i];
+    for (let i=0; i<hitSrc.length; i++) {
+      const sl=hitSrc[i];
       if(isOv(sl)) continue;
       const col=i%2, row=Math.floor(i/2);
       if(x>=col*S && x<(col+1)*S && y>=row*S && y<(row+1)*S) return i;
@@ -899,8 +902,8 @@ function hitSlot(x, y) {
   }
 
   // Overlay slots are on top → check in reverse order first
-  for (let i=curTpl.slots.length-1; i>=0; i--) {
-    const sl=curTpl.slots[i];
+  for (let i=hitSrc.length-1; i>=0; i--) {
+    const sl=hitSrc[i];
     if (!isOv(sl)) continue;
     const cx=sl.cx*S, cy=sl.cy*H, hw=sl.w*S/2, hh=sl.h*S/2;
     const ang=-(sl.rot||0)*Math.PI/180;
@@ -910,8 +913,8 @@ function hitSlot(x, y) {
     if(Math.abs(lx)<=hw && Math.abs(ly)<=hh) return i;
   }
   // Regular slots
-  for (let i=0; i<curTpl.slots.length; i++) {
-    const sl=curTpl.slots[i];
+  for (let i=0; i<hitSrc.length; i++) {
+    const sl=hitSrc[i];
     if(isOv(sl)) continue;
     if(x>=sl.x*S && x<(sl.x+sl.w)*S && y>=sl.y*H && y<(sl.y+sl.h)*H) return i;
   }
