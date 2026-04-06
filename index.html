@@ -31,7 +31,7 @@
     #cat-nav{ flex-shrink:0; display:flex; background:#111; border-top:1px solid #1e1e1e; padding:6px 8px; padding-bottom:max(10px,env(safe-area-inset-bottom)); gap:4px; }
     .cat-nav-btn{ flex:1; background:none; border:1px solid #2a2a2a; border-radius:20px; color:rgba(255,255,255,.6); font-size:12px; font-weight:500; padding:7px 4px; cursor:pointer; font-family:inherit; }
     .cat-nav-btn:active{ background:#222; color:#fff; }
-    .tcard-scroll{ position:absolute; top:0; left:0; width:100%; height:100%; overflow-x:auto; overflow-y:hidden; -webkit-overflow-scrolling:touch; touch-action:pan-x; }
+    .tcard-scroll{ position:absolute; top:0; left:0; width:100%; height:100%; overflow-x:auto; overflow-y:hidden; -webkit-overflow-scrolling:touch; touch-action:pan-x; overscroll-behavior-x:contain; }
     .tcard-scroll::-webkit-scrollbar{ display:none; }
     .tcard-arrow{ position:absolute; right:10px; top:50%; transform:translateY(-50%); background:rgba(0,0,0,.55); color:#fff; width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; line-height:1; pointer-events:none; z-index:5; -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px); transition:opacity .3s; }
     .tcard-scroll.scrolled + .tcard-arrow{ opacity:0; }
@@ -133,25 +133,16 @@ const TPLS = [
   { id:'por1', cat:'portrait', name:'雙直全景', slides:2, photos:1, aspect:1.25,
     slots:[{x:0,y:0,w:2,h:1}] },
 
-  { id:'por2', cat:'portrait', name:'雙直並排', slides:2, photos:2, aspect:1.25,
-    slots:[{x:0,y:0,w:1,h:1},{x:1,y:0,w:1,h:1}] },
-
-  // 錯位 — slide 1 top-aligned, slide 2 bottom-aligned
-  { id:'por3', cat:'portrait', name:'雙直錯位', slides:2, photos:2, aspect:1.25,
-    slots:[{x:0,y:0,w:1,h:0.84},{x:1,y:0.16,w:1,h:0.84}] },
-
-  { id:'por4', cat:'portrait', name:'三直全景', slides:3, photos:1, aspect:1.25,
-    slots:[{x:0,y:0,w:3,h:1}] },
-
-  { id:'por5', cat:'portrait', name:'三直並排', slides:3, photos:3, aspect:1.25,
-    slots:[{x:0,y:0,w:1,h:1},{x:1,y:0,w:1,h:1},{x:2,y:0,w:1,h:1}] },
+  { id:'por4', cat:'portrait', name:'四直全景', slides:4, photos:1, aspect:1.25,
+    slots:[{x:0,y:0,w:4,h:1}] },
 
   // 三格錯位 — alternating up/down
   { id:'por6', cat:'portrait', name:'三直錯位', slides:3, photos:3, aspect:1.25,
     slots:[{x:0,y:0,w:1,h:0.84},{x:1,y:0.16,w:1,h:0.84},{x:2,y:0,w:1,h:0.84}] },
 
-  { id:'por7', cat:'portrait', name:'四直並排', slides:4, photos:4, aspect:1.25,
-    slots:[{x:0,y:0,w:1,h:1},{x:1,y:0,w:1,h:1},{x:2,y:0,w:1,h:1},{x:3,y:0,w:1,h:1}] },
+  // 四格錯位 — alternating up/down
+  { id:'por6b', cat:'portrait', name:'四直錯位', slides:4, photos:4, aspect:1.25,
+    slots:[{x:0,y:0,w:1,h:0.84},{x:1,y:0.16,w:1,h:0.84},{x:2,y:0,w:1,h:0.84},{x:3,y:0.16,w:1,h:0.84}] },
 
   // 圖押圖 — two backgrounds, portrait overlay straddling boundary
   { id:'por8', cat:'portrait', name:'雙直押圖', slides:2, photos:3, aspect:1.25,
@@ -176,26 +167,16 @@ const TPLS = [
 
   // ── 方格版型 (square, aspect 1:1) ──
 
-  // 2×2 四拼
-  { id:'sq1', cat:'grid', name:'一格四拼', slides:1, photos:4,
-    slots:[{x:0,y:0,w:0.5,h:0.5},{x:0.5,y:0,w:0.5,h:0.5},
-           {x:0,y:0.5,w:0.5,h:0.5},{x:0.5,y:0.5,w:0.5,h:0.5}] },
-
-  { id:'sq2', cat:'grid', name:'單格全景', slides:1, photos:1,
-    slots:[{x:0,y:0,w:1,h:1}] },
-
-  { id:'sq3', cat:'grid', name:'雙格並排', slides:2, photos:2,
-    slots:[{x:0,y:0,w:1,h:1},{x:1,y:0,w:1,h:1}] },
-
   { id:'sq4', cat:'grid', name:'三格全景', slides:3, photos:1,
     slots:[{x:0,y:0,w:3,h:1}] },
 
   { id:'sq5', cat:'grid', name:'四格全景', slides:4, photos:1,
     slots:[{x:0,y:0,w:4,h:1}] },
 
-  // 單格拼貼：上大下雙
-  { id:'sq6', cat:'grid', name:'上景下雙', slides:1, photos:3,
-    slots:[{x:0,y:0,w:1,h:0.55},{x:0,y:0.55,w:0.5,h:0.45},{x:0.5,y:0.55,w:0.5,h:0.45}] },
+  // 上雙下雙：上面兩張全景感並排，下面兩張並排
+  { id:'sq6', cat:'grid', name:'上雙下雙', slides:1, photos:4,
+    slots:[{x:0,y:0,w:0.5,h:0.55},{x:0.5,y:0,w:0.5,h:0.55},
+           {x:0,y:0.55,w:0.5,h:0.45},{x:0.5,y:0.55,w:0.5,h:0.45}] },
 
   // 左大右雙
   { id:'sq7', cat:'grid', name:'左大右雙', slides:2, photos:3,
@@ -224,11 +205,11 @@ const TPLS = [
            {ov:true,cx:1.50,cy:0.54,w:0.50,h:0.50,rot:3,frame:1,shadow:true},
            {ov:true,cx:2.52,cy:0.46,w:0.50,h:0.50,rot:-4,frame:1,shadow:true}] },
 
-  // 2×2四拼 + 中央押圖
+  // 2×2四拼 + 中央押圖（押圖縮小50%）
   { id:'sq12', cat:'grid', name:'四拼押圖', slides:1, photos:5,
     slots:[{x:0,y:0,w:0.5,h:0.5},{x:0.5,y:0,w:0.5,h:0.5},
            {x:0,y:0.5,w:0.5,h:0.5},{x:0.5,y:0.5,w:0.5,h:0.5},
-           {ov:true,cx:0.5,cy:0.5,w:0.50,h:0.50,rot:-4,frame:1,shadow:true}] },
+           {ov:true,cx:0.5,cy:0.5,w:0.25,h:0.25,rot:-4,frame:1,shadow:true}] },
 ];
 
 // Preview slot colours — muted tones that look good in gallery
@@ -332,10 +313,10 @@ function buildGallery() {
     if (dataURL) img.src = dataURL;
 
     if (needsScroll) {
-      // Scrollable container — img keeps natural width, card scrolls horizontally
+      // Scrollable container — explicit pixel size so iOS doesn't constrain img width
       const scroller = document.createElement('div');
       scroller.className = 'tcard-scroll';
-      img.style.cssText = 'height:100%;width:auto;display:block;pointer-events:none;';
+      img.style.cssText = `height:${cardH}px;width:${tpl.slides * tileW}px;display:block;pointer-events:none;flex-shrink:0;`;
       scroller.appendChild(img);
       // Hide arrow once user has scrolled
       scroller.addEventListener('scroll', () => scroller.classList.add('scrolled'), {once:true});
