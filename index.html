@@ -630,8 +630,12 @@ function startEditor(tpl) {
   document.getElementById('editor-title').textContent = tpl.name;
 
   const cvs = document.getElementById('editor-canvas');
-  cvs.width  = tpl.slides * LOGICAL_S;
-  cvs.height = Math.round(LOGICAL_S * (tpl.aspect || 1));
+  if (tpl.preview2x2) {
+    cvs.width = 2 * LOGICAL_S; cvs.height = 2 * LOGICAL_S;
+  } else {
+    cvs.width  = tpl.slides * LOGICAL_S;
+    cvs.height = Math.round(LOGICAL_S * (tpl.aspect || 1));
+  }
 
   const scrollEl = document.getElementById('editor-scroll');
   const availW = scrollEl.clientWidth  || window.innerWidth;
@@ -671,6 +675,46 @@ function renderEditor() {
   const cvs = document.getElementById('editor-canvas');
   const ctx = cvs.getContext('2d');
   const S = LOGICAL_S, G = 3;
+
+  if (tpl.preview2x2) {
+    const H2 = 2*S;
+    ctx.fillStyle = '#111'; ctx.fillRect(0, 0, 2*S, H2);
+    // Pass 1: 2×2 regular slots (index 0=TL,1=TR,2=BL,3=BR)
+    tpl.slots.forEach((sl, i) => {
+      if (isOv(sl)) return;
+      const col = i%2, row = Math.floor(i/2);
+      const sx=col*S, sy=row*S;
+      const x0=sx+G, y0=sy+G, w0=S-G*2, h0=S-G*2;
+      const ph = slotPhotos[i];
+      ctx.save(); ctx.beginPath(); ctx.rect(x0,y0,w0,h0); ctx.clip();
+      if (ph && ph.img) {
+        drawPhotoClip(ctx, ph.img, sx, sy, S, S, ph.ox, ph.oy, ph.scale);
+      } else {
+        ctx.fillStyle = i===activeSlot ? '#3a3a3a' : '#2a2a2a'; ctx.fillRect(x0,y0,w0,h0);
+        drawPlus(ctx, sx+S/2, sy+S/2, 22, i===activeSlot);
+      }
+      ctx.restore();
+      if (i===activeSlot) { ctx.strokeStyle='#0095f6'; ctx.lineWidth=3; ctx.strokeRect(sx+1.5,sy+1.5,S-3,S-3); }
+      if (i===swapOverSlot) { ctx.fillStyle='rgba(255,255,255,.22)'; ctx.fillRect(sx,sy,S,S); ctx.strokeStyle='#fff'; ctx.lineWidth=3; ctx.strokeRect(sx+1.5,sy+1.5,S-3,S-3); }
+    });
+    ctx.strokeStyle='rgba(255,255,255,.18)'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(S,0); ctx.lineTo(S,H2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0,S); ctx.lineTo(2*S,S); ctx.stroke();
+    // Pass 2: overlay slots — remap cx to center of 2×2 canvas
+    tpl.slots.forEach((sl, i) => {
+      if (!isOv(sl)) return;
+      drawOvSlot(ctx, {...sl, cx:1.0, cy:0.5}, i, S, H2, false);
+    });
+    // Pass 3: text layers
+    textLayers.forEach(tl => {
+      if (previewText && tl.id === textEditingId) return;
+      drawTextOnCtx(ctx, tl.text, tl.x, tl.y, tl.fontSize, tl.color, tl.bgShape||'none', tl.bgColor||'#000', tl.fontFam||'sans', tl.shadow||'none', tl.rot||0, tl.shadowColor||'#000000');
+      if (tl.id === activeTextId && !previewText) drawTextHandles(ctx, tl);
+    });
+    if (previewText) drawTextOnCtx(ctx, previewText.text, previewText.x, previewText.y, previewText.fontSize, previewText.color, previewText.bgShape||'none', previewText.bgColor||'#000', previewText.fontFam||'sans', previewText.shadow||'none', 0, previewText.shadowColor||'#000000');
+    return;
+  }
+
   const H = Math.round(S * (tpl.aspect || 1));
 
   const isLightBg = !!tpl.bg;
@@ -805,7 +849,10 @@ function showUpdateBtn(si) {
   const S = LOGICAL_S;
   const H = Math.round(S * (curTpl.aspect || 1));
   let bx, by;
-  if (isOv(sl)) {
+  if (curTpl.preview2x2) {
+    if (isOv(sl)) { bx = rect.left + S * viewScale; by = rect.top + S * viewScale; }
+    else { const col=si%2, row=Math.floor(si/2); bx=rect.left+(col+0.5)*S*viewScale; by=rect.top+(row+0.5)*S*viewScale; }
+  } else if (isOv(sl)) {
     bx = rect.left + sl.cx * S * viewScale;
     by = rect.top  + sl.cy * H * viewScale;
   } else {
@@ -832,6 +879,25 @@ function replacePhoto() {
 function hitSlot(x, y) {
   const S = LOGICAL_S;
   const H = Math.round(S * (curTpl.aspect || 1));
+
+  if (curTpl.preview2x2) {
+    for (let i=curTpl.slots.length-1; i>=0; i--) {
+      const sl=curTpl.slots[i];
+      if (!isOv(sl)) continue;
+      const hw=sl.w*S/2, hh=sl.h*S/2;
+      const ang=-(sl.rot||0)*Math.PI/180, dx=x-S, dy=y-S;
+      const lx=dx*Math.cos(ang)-dy*Math.sin(ang), ly=dx*Math.sin(ang)+dy*Math.cos(ang);
+      if(Math.abs(lx)<=hw && Math.abs(ly)<=hh) return i;
+    }
+    for (let i=0; i<curTpl.slots.length; i++) {
+      const sl=curTpl.slots[i];
+      if(isOv(sl)) continue;
+      const col=i%2, row=Math.floor(i/2);
+      if(x>=col*S && x<(col+1)*S && y>=row*S && y<(row+1)*S) return i;
+    }
+    return -1;
+  }
+
   // Overlay slots are on top → check in reverse order first
   for (let i=curTpl.slots.length-1; i>=0; i--) {
     const sl=curTpl.slots[i];
