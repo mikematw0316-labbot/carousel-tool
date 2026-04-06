@@ -251,27 +251,49 @@
 //                cx/cy = center in slide-units; rot = degrees; frame = border % of min dim
 const TPLS = [
 
-  // ── 直式版型 (portrait, aspect 4:5 = 1.25) ──
-  // Coordinate note: x/w in slide-width units; y/h in slide-HEIGHT units (0–1)
-  // Overlay: cx in slide-width units, cy in slide-height units
+  // ── 直式版型 ──
 
-  { id:'por1', cat:'portrait', name:'雙直全景', slides:2, photos:1, aspect:1.25,
+  { id:'por1',  cat:'portrait', name:'雙直全景', slides:2, photos:1, aspect:1.25,
     slots:[{x:0,y:0,w:2,h:1}] },
 
-  // 三格錯位 — alternating up/down, black bg for stagger effect
-  { id:'por6', cat:'portrait', name:'三直錯位', slides:3, photos:3, aspect:1.25, blackBg:true,
+  { id:'sq7',   cat:'portrait', name:'左大右雙', slides:2, photos:3,
+    slots:[{x:0,y:0,w:1,h:1},{x:1,y:0,w:1,h:0.5},{x:1,y:0.5,w:1,h:0.5}] },
+
+  { id:'por12', cat:'portrait', name:'左雙右大', slides:2, photos:3,
+    slots:[{x:0,y:0,w:1,h:0.5},{x:0,y:0.5,w:1,h:0.5},{x:1,y:0,w:1,h:1}] },
+
+  { id:'por8',  cat:'portrait', name:'雙直押圖', slides:2, photos:3, aspect:1.25,
+    slots:[{x:0,y:0,w:1,h:1},{x:1,y:0,w:1,h:1},
+           {ov:true,cx:1.0,cy:0.5,w:0.56,h:0.68,rot:-5,frame:1,shadow:true}] },
+
+  { id:'sq9',   cat:'portrait', name:'雙格押圖', slides:2, photos:3,
+    slots:[{x:0,y:0,w:1,h:1},{x:1,y:0,w:1,h:1},
+           {ov:true,cx:1.0,cy:0.5,w:0.54,h:0.54,rot:5,frame:1,shadow:true}] },
+
+  { id:'sq10',  cat:'portrait', name:'底景雙押', slides:2, photos:3,
+    slots:[{x:0,y:0,w:2,h:1},
+           {ov:true,cx:0.45,cy:0.48,w:0.52,h:0.52,rot:-5,frame:1,shadow:true},
+           {ov:true,cx:1.55,cy:0.52,w:0.52,h:0.52,rot:4,frame:1,shadow:true}] },
+
+  { id:'por9',  cat:'portrait', name:'錯位押圖', slides:2, photos:3, aspect:1.25, blackBg:true,
+    slots:[{x:0,y:0,w:1,h:0.84},{x:1,y:0.16,w:1,h:0.84},
+           {ov:true,cx:1.0,cy:0.5,w:0.56,h:0.68,rot:5,frame:1,shadow:true}] },
+
+  { id:'por11', cat:'portrait', name:'雙押交叉', slides:2, photos:4, aspect:1.25,
+    slots:[{x:0,y:0,w:1,h:1},{x:1,y:0,w:1,h:1},
+           {ov:true,cx:0.42,cy:0.64,w:0.52,h:0.62,rot:-4,frame:1,shadow:true},
+           {ov:true,cx:1.58,cy:0.36,w:0.52,h:0.62,rot:4,frame:1,shadow:true}] },
+
+  { id:'por6',  cat:'portrait', name:'三直錯位', slides:3, photos:3, aspect:1.25, blackBg:true,
     slots:[{x:0,y:0,w:1,h:0.84},{x:1,y:0.16,w:1,h:0.84},{x:2,y:0,w:1,h:0.84}] },
 
-  // 四直全景 — 一圖四格，1000×1920
-  { id:'por4', cat:'portrait', name:'四直全景', slides:4, photos:1, aspect:1.92, exportW:1000, exportH:1920,
+  { id:'por4',  cat:'portrait', name:'四直全景', slides:4, photos:1, aspect:1.92, exportW:1000, exportH:1920,
     slots:[{x:0,y:0,w:4,h:1}] },
 
-  // 四格錯位 — 1000×1920，全幅匯出（FB版型自動錯位），預覽顯示黑邊錯位效果
   { id:'por6b', cat:'portrait', name:'四直錯位', slides:4, photos:4, aspect:1.92, exportW:1000, exportH:1920,
     previewSlots:[{x:0,y:0,w:1,h:0.84},{x:1,y:0.16,w:1,h:0.84},{x:2,y:0,w:1,h:0.84},{x:3,y:0.16,w:1,h:0.84}],
     slots:[{x:0,y:0,w:1,h:1},{x:1,y:0,w:1,h:1},{x:2,y:0,w:1,h:1},{x:3,y:0,w:1,h:1}] },
 
-  // 四直押圖 — 全幅底圖 + 三張押圖，預覽錯位黑邊，匯出全幅（FB自動錯位）
   { id:'por7b', cat:'portrait', name:'四直押圖', slides:4, photos:7, aspect:1.92, exportW:1000, exportH:1920,
     previewSlots:[{x:0,y:0,w:1,h:0.84},{x:1,y:0.16,w:1,h:0.84},{x:2,y:0,w:1,h:0.84},{x:3,y:0.16,w:1,h:0.84},
                   {ov:true,cx:1.0,cy:0.38,w:0.52,h:0.6,rot:-5,frame:1,shadow:true},
@@ -282,66 +304,26 @@ const TPLS = [
            {ov:true,cx:2.0,cy:0.5,w:0.52,h:0.6,rot:3,frame:1,shadow:true},
            {ov:true,cx:3.0,cy:0.62,w:0.52,h:0.6,rot:5,frame:1,shadow:true}] },
 
-  // 圖押圖 — two backgrounds, portrait overlay straddling boundary
-  { id:'por8', cat:'portrait', name:'雙直押圖', slides:2, photos:3, aspect:1.25,
-    slots:[{x:0,y:0,w:1,h:1},{x:1,y:0,w:1,h:1},
-           {ov:true,cx:1.0,cy:0.5,w:0.56,h:0.68,rot:-5,frame:1,shadow:true}] },
+  // ── 方格版型 ──
 
-  // 錯位 + 圖押圖，black bg for stagger effect
-  { id:'por9', cat:'portrait', name:'錯位押圖', slides:2, photos:3, aspect:1.25, blackBg:true,
-    slots:[{x:0,y:0,w:1,h:0.84},{x:1,y:0.16,w:1,h:0.84},
-           {ov:true,cx:1.0,cy:0.5,w:0.56,h:0.68,rot:5,frame:1,shadow:true}] },
+  { id:'sq4',   cat:'grid', name:'三格全景', slides:3, photos:1,
+    slots:[{x:0,y:0,w:3,h:1}] },
 
-  // 全景底景 + overlay
+  { id:'sq8',   cat:'grid', name:'單格押圖', slides:1, photos:2,
+    slots:[{x:0,y:0,w:1,h:1},
+           {ov:true,cx:0.5,cy:0.5,w:0.55,h:0.55,rot:-5,frame:1,shadow:true}] },
+
   { id:'por10', cat:'grid', name:'底景押圖', slides:2, photos:2, aspect:1.25,
     slots:[{x:0,y:0,w:2,h:1},
            {ov:true,cx:1.0,cy:0.5,w:0.56,h:0.68,rot:3,frame:1,shadow:true}] },
 
-  // 兩背景 + 兩個押圖，對角交叉
-  { id:'por11', cat:'portrait', name:'雙押交叉', slides:2, photos:4, aspect:1.25,
-    slots:[{x:0,y:0,w:1,h:1},{x:1,y:0,w:1,h:1},
-           {ov:true,cx:0.42,cy:0.64,w:0.52,h:0.62,rot:-4,frame:1,shadow:true},
-           {ov:true,cx:1.58,cy:0.36,w:0.52,h:0.62,rot:4,frame:1,shadow:true}] },
-
-  // ── 方格版型 (square, aspect 1:1) ──
-
-  { id:'sq4', cat:'grid', name:'三格全景', slides:3, photos:1,
-    slots:[{x:0,y:0,w:3,h:1}] },
-
-
-  // 左大右雙
-  { id:'sq7', cat:'portrait', name:'左大右雙', slides:2, photos:3,
-    slots:[{x:0,y:0,w:1,h:1},{x:1,y:0,w:1,h:0.5},{x:1,y:0.5,w:1,h:0.5}] },
-
-  // 左雙右大（左大右雙鏡像）
-  { id:'por12', cat:'portrait', name:'左雙右大', slides:2, photos:3,
-    slots:[{x:0,y:0,w:1,h:0.5},{x:0,y:0.5,w:1,h:0.5},{x:1,y:0,w:1,h:1}] },
-
-  // 單格 + 押圖
-  { id:'sq8', cat:'grid', name:'單格押圖', slides:1, photos:2,
-    slots:[{x:0,y:0,w:1,h:1},
-           {ov:true,cx:0.5,cy:0.5,w:0.55,h:0.55,rot:-5,frame:1,shadow:true}] },
-
-  // 雙格 + 押圖跨縫
-  { id:'sq9', cat:'portrait', name:'雙格押圖', slides:2, photos:3,
-    slots:[{x:0,y:0,w:1,h:1},{x:1,y:0,w:1,h:1},
-           {ov:true,cx:1.0,cy:0.5,w:0.54,h:0.54,rot:5,frame:1,shadow:true}] },
-
-  // 全景底景 + 雙押圖
-  { id:'sq10', cat:'portrait', name:'底景雙押', slides:2, photos:3,
-    slots:[{x:0,y:0,w:2,h:1},
-           {ov:true,cx:0.45,cy:0.48,w:0.52,h:0.52,rot:-5,frame:1,shadow:true},
-           {ov:true,cx:1.55,cy:0.52,w:0.52,h:0.52,rot:4,frame:1,shadow:true}] },
-
-  // 四格全景 + 三個押圖
-  { id:'sq11', cat:'grid', name:'三格三押', slides:3, photos:4,
+  { id:'sq11',  cat:'grid', name:'三格三押', slides:3, photos:4,
     slots:[{x:0,y:0,w:3,h:1},
            {ov:true,cx:0.48,cy:0.46,w:0.50,h:0.50,rot:-5,frame:1,shadow:true},
            {ov:true,cx:1.50,cy:0.54,w:0.50,h:0.50,rot:3,frame:1,shadow:true},
            {ov:true,cx:2.52,cy:0.46,w:0.50,h:0.50,rot:-4,frame:1,shadow:true}] },
 
-  // 上2下2各一張全格，存4圖，2×2預覽
-  { id:'sq12', cat:'grid', name:'四拼押圖', slides:4, photos:5, preview2x2:true,
+  { id:'sq12',  cat:'grid', name:'四拼押圖', slides:4, photos:5, preview2x2:true,
     slots:[{x:0,y:0,w:1,h:1},{x:1,y:0,w:1,h:1},{x:2,y:0,w:1,h:1},{x:3,y:0,w:1,h:1},
            {ov:true,cx:2.0,cy:0.5,w:0.52,h:0.52,rot:-4,frame:1,shadow:true}] },
 ];
