@@ -601,17 +601,13 @@ function drawOvPreview(ctx, sl, tileSize, H, sImg) {
   if (sl.shadow) {
     ctx.shadowColor='rgba(0,0,0,.4)'; ctx.shadowBlur=8; ctx.shadowOffsetX=2; ctx.shadowOffsetY=3;
   }
-  if (fw>0) {
-    ctx.fillStyle = OV_FRM_COLOR;
-    ctx.fillRect(-w/2,-h/2,w,h);
-    ctx.shadowColor='transparent'; ctx.shadowBlur=0;
-  }
   const iw=w-fw*2, ih=h-fw*2;
   const r=Math.min(iw,ih)/2;
-  if (sl.circle && fw>0) {
+  if (fw>0) {
     ctx.fillStyle = OV_FRM_COLOR;
+    if (sl.circle) { ctx.beginPath(); ctx.arc(0,0,r+fw,0,Math.PI*2); ctx.fill(); }
+    else { ctx.fillRect(-w/2,-h/2,w,h); }
     ctx.shadowColor='transparent'; ctx.shadowBlur=0;
-    ctx.beginPath(); ctx.arc(0,0,r+fw,0,Math.PI*2); ctx.fill();
   }
   if (sImg && sImg.naturalWidth) {
     ctx.save();
