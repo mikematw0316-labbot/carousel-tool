@@ -325,20 +325,20 @@ const TPLS = [
            {ov:true,cx:2.0,cy:0.5,w:0.52,h:0.52,rot:-4,frame:1,shadow:true}] },
 
   // 上1下2 — 頂部全景 + 底左右各半，1:2直式
-  { id:'sq13',  cat:'grid', name:'上1下2', slides:3, photos:3, aspect:2, fb:true,
+  { id:'sq13',  cat:'grid', name:'上1下2', slides:3, photos:3, aspect:2, fb:true, noDividers:true,
     slots:[{x:0,y:0,w:3,h:0.5},
            {x:0,y:0.5,w:1.5,h:0.5},
            {x:1.5,y:0.5,w:1.5,h:0.5}] },
 
   // 上1下2押圖（圓形押圖在三圖交匯處）
-  { id:'sq14',  cat:'grid', name:'上1下2押圖', slides:3, photos:4, aspect:2, fb:true,
+  { id:'sq14',  cat:'grid', name:'上1下2押圖', slides:3, photos:4, aspect:2, fb:true, noDividers:true,
     slots:[{x:0,y:0,w:3,h:0.5},
            {x:0,y:0.5,w:1.5,h:0.5},
            {x:1.5,y:0.5,w:1.5,h:0.5},
-           {ov:true,cx:1.5,cy:0.5,w:0.54,h:0.27,circle:true,shadow:true}] },
+           {ov:true,cx:1.5,cy:0.5,w:1.35,h:0.675,circle:true,shadow:true}] },
 
   // 上1下2押圖2（押圖在下兩張中間，高度x2）
-  { id:'sq15',  cat:'grid', name:'上1下2押圖2', slides:3, photos:4, aspect:2, fb:true,
+  { id:'sq15',  cat:'grid', name:'上1下2押圖2', slides:3, photos:4, aspect:2, fb:true, noDividers:true,
     slots:[{x:0,y:0,w:3,h:0.5},
            {x:0,y:0.5,w:1.5,h:0.5},
            {x:1.5,y:0.5,w:1.5,h:0.5},
@@ -571,9 +571,11 @@ function drawLayout(canvas, tpl, tileSize, gradient) {
   });
 
   // Slide dividers
-  ctx.strokeStyle = 'rgba(0,0,0,.7)'; ctx.lineWidth = Math.max(2, gap);
-  for (let i=1; i<tpl.slides; i++) {
-    ctx.beginPath(); ctx.moveTo(i*tileSize,0); ctx.lineTo(i*tileSize,H); ctx.stroke();
+  if (!tpl.noDividers) {
+    ctx.strokeStyle = 'rgba(0,0,0,.7)'; ctx.lineWidth = Math.max(2, gap);
+    for (let i=1; i<tpl.slides; i++) {
+      ctx.beginPath(); ctx.moveTo(i*tileSize,0); ctx.lineTo(i*tileSize,H); ctx.stroke();
+    }
   }
 
   // Pass 2: overlay slots — count regular slots to continue photo index
@@ -774,9 +776,11 @@ function renderEditor() {
   });
 
   // Slide dividers
-  ctx.strokeStyle='rgba(255,255,255,.18)'; ctx.lineWidth=1;
-  for (let i=1; i<tpl.slides; i++) {
-    ctx.beginPath(); ctx.moveTo(i*S,0); ctx.lineTo(i*S,H); ctx.stroke();
+  if (!tpl.noDividers) {
+    ctx.strokeStyle='rgba(255,255,255,.18)'; ctx.lineWidth=1;
+    for (let i=1; i<tpl.slides; i++) {
+      ctx.beginPath(); ctx.moveTo(i*S,0); ctx.lineTo(i*S,H); ctx.stroke();
+    }
   }
 
   // Pass 2: overlay slots (on top)
