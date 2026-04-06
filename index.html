@@ -64,6 +64,24 @@
     #file-input{ display:none; }
     #toast{ position:fixed; bottom:40px; left:50%; transform:translateX(-50%) translateY(10px); background:rgba(20,20,20,.93); color:#fff; padding:9px 18px; border-radius:20px; font-size:13px; opacity:0; transition:all .25s; pointer-events:none; z-index:999; white-space:nowrap; max-width:82vw; text-align:center; }
     #toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+    #editor-tools{ display:flex; gap:8px; padding:0 0 8px; }
+    .tool-btn{ background:#222; border:1px solid #333; border-radius:20px; color:#fff; font-size:13px; font-weight:500; padding:7px 18px; cursor:pointer; min-height:36px; font-family:inherit; }
+    #text-panel{ position:fixed; inset:0; background:rgba(0,0,0,.65); z-index:300; display:none; flex-direction:column; justify-content:flex-end; }
+    #text-panel.show{ display:flex; }
+    #text-panel-inner{ background:#1c1c1e; border-radius:20px 20px 0 0; padding:18px 16px; padding-bottom:max(22px,env(safe-area-inset-bottom)); display:flex; flex-direction:column; gap:12px; }
+    #text-input{ width:100%; background:#2a2a2a; border:none; border-radius:12px; color:#fff; font-size:16px; padding:12px 14px; min-height:68px; resize:none; font-family:inherit; outline:none; }
+    .topt-row{ display:flex; align-items:center; gap:8px; }
+    .topt-lbl{ font-size:11px; color:#888; width:28px; flex-shrink:0; }
+    .tsz-btn{ flex:1; background:#2a2a2a; border:1px solid #3a3a3a; border-radius:10px; color:#fff; font-size:13px; padding:7px 0; cursor:pointer; font-family:inherit; }
+    .tsz-btn.sel{ background:#fff; color:#000; border-color:#fff; }
+    .tclr-sw{ width:30px; height:30px; border-radius:50%; border:2px solid transparent; cursor:pointer; flex-shrink:0; }
+    .tclr-sw.sel{ border-color:#0095f6; box-shadow:0 0 0 1px #0095f6; }
+    .tbg-btn{ flex:1; background:#2a2a2a; border:1px solid #3a3a3a; border-radius:10px; color:#fff; font-size:12px; padding:7px 0; cursor:pointer; font-family:inherit; }
+    .tbg-btn.sel{ border-color:#0095f6; }
+    .tpanel-acts{ display:flex; gap:10px; margin-top:2px; }
+    .tpanel-acts button{ flex:1; height:46px; border-radius:23px; border:none; font-size:15px; font-weight:600; cursor:pointer; font-family:inherit; }
+    #tpanel-cancel{ background:#2a2a2a; color:#fff; }
+    #tpanel-confirm{ background:#fff; color:#000; }
   </style>
 </head>
 <body>
@@ -95,6 +113,9 @@
     <button class="zbtn" ontouchend="event.preventDefault();zoomEditor(-1)" onclick="zoomEditor(-1)">−</button>
   </div>
   <div id="editor-bottom">
+    <div id="editor-tools">
+      <button class="tool-btn" onclick="openTextPanel(null)">文字</button>
+    </div>
     <div id="editor-hint">點格子新增照片 · 右下角 +/− 縮放</div>
     <button id="save-btn" onclick="saveAll()">儲存</button>
   </div>
@@ -114,6 +135,36 @@
 <div id="update-btn">
   <button onclick="replacePhoto()">更換照片</button>
   <button class="ubtn-cancel" onclick="hideUpdateBtn()">取消</button>
+</div>
+<div id="text-panel">
+  <div id="text-panel-inner">
+    <textarea id="text-input" placeholder="輸入文字..."></textarea>
+    <div class="topt-row">
+      <span class="topt-lbl">大小</span>
+      <button class="tsz-btn sel" data-sz="28" onclick="selectTSz(this)">小</button>
+      <button class="tsz-btn" data-sz="44" onclick="selectTSz(this)">中</button>
+      <button class="tsz-btn" data-sz="62" onclick="selectTSz(this)">大</button>
+    </div>
+    <div class="topt-row">
+      <span class="topt-lbl">顏色</span>
+      <div class="tclr-sw sel" data-c="#ffffff" style="background:#fff" onclick="selectTColor(this)"></div>
+      <div class="tclr-sw" data-c="#000000" style="background:#000;border-color:#555" onclick="selectTColor(this)"></div>
+      <div class="tclr-sw" data-c="#ffdd00" style="background:#ffdd00" onclick="selectTColor(this)"></div>
+      <div class="tclr-sw" data-c="#ff4455" style="background:#f45" onclick="selectTColor(this)"></div>
+      <div class="tclr-sw" data-c="#44aaff" style="background:#4af" onclick="selectTColor(this)"></div>
+    </div>
+    <div class="topt-row">
+      <span class="topt-lbl">底色</span>
+      <button class="tbg-btn sel" data-bg="none" onclick="selectTBg(this)">無</button>
+      <button class="tbg-btn" data-bg="#ffffff" style="color:#000" onclick="selectTBg(this)">白</button>
+      <button class="tbg-btn" data-bg="#000000" onclick="selectTBg(this)">黑</button>
+      <button class="tbg-btn" data-bg="#ffdd00" style="color:#000" onclick="selectTBg(this)">黃</button>
+    </div>
+    <div class="tpanel-acts">
+      <button id="tpanel-cancel" onclick="closeTextPanel()">取消</button>
+      <button id="tpanel-confirm" onclick="confirmTextEdit()">加入</button>
+    </div>
+  </div>
 </div>
 <div id="toast"></div>
 
@@ -137,12 +188,12 @@ const TPLS = [
   { id:'por6', cat:'portrait', name:'三直錯位', slides:3, photos:3, aspect:1.25,
     slots:[{x:0,y:0,w:1,h:0.84},{x:1,y:0.16,w:1,h:0.84},{x:2,y:0,w:1,h:0.84}] },
 
-  // 四直全景 — 一圖四格，9:16 比例
-  { id:'por4', cat:'portrait', name:'四直全景', slides:4, photos:1, aspect:1.78,
+  // 四直全景 — 一圖四格，1000×1920
+  { id:'por4', cat:'portrait', name:'四直全景', slides:4, photos:1, aspect:1.92, exportW:1000, exportH:1920,
     slots:[{x:0,y:0,w:4,h:1}] },
 
-  // 四格錯位 — 9:16 比例，交替上下錯位
-  { id:'por6b', cat:'portrait', name:'四直錯位', slides:4, photos:4, aspect:1.78,
+  // 四格錯位 — 1000×1920，交替上下錯位
+  { id:'por6b', cat:'portrait', name:'四直錯位', slides:4, photos:4, aspect:1.92, exportW:1000, exportH:1920,
     slots:[{x:0,y:0,w:1,h:0.84},{x:1,y:0.16,w:1,h:0.84},{x:2,y:0,w:1,h:0.84},{x:3,y:0.16,w:1,h:0.84}] },
 
   // 圖押圖 — two backgrounds, portrait overlay straddling boundary
@@ -223,6 +274,13 @@ const LOGICAL_S = 300;
 let viewScale = 1;
 const EXPORT_PX = 1080;
 
+// ── Text layers ────────────────────────────────────────
+let textLayers = [];
+let activeTextId = null;
+let textEditingId = null;
+let textDrag = null;
+let curTSz = 28, curTColor = '#ffffff', curTBg = 'none';
+
 // ── Sample photos (preloaded for gallery previews) ─────
 const SAMPLE_URLS = [
   'photos/p1.jpg','photos/p2.jpg','photos/p3.jpg','photos/p4.jpg',
@@ -242,7 +300,7 @@ function goTo(id) {
     if (i < toIdx) el.classList.add('off-left');
   });
 }
-function goBack() { hideUpdateBtn(); document.getElementById('zoom-ctrl').classList.remove('show'); document.getElementById('editor-bottom').classList.remove('show'); goTo('gallery'); }
+function goBack() { textLayers=[]; activeTextId=null; hideUpdateBtn(); document.getElementById('zoom-ctrl').classList.remove('show'); document.getElementById('editor-bottom').classList.remove('show'); goTo('gallery'); }
 
 // ── Slot helpers ──────────────────────────────────────
 function isOv(sl) { return !!sl.ov; }
@@ -304,7 +362,7 @@ function buildGallery() {
 
     const info = document.createElement('div');
     info.className = 'tcard-info';
-    info.innerHTML = `<span class="tcard-name">${tpl.name}</span><span class="tcard-meta">${tpl.slides}格 · ${tpl.photos}張</span>`;
+    info.innerHTML = `<span class="tcard-name">${tpl.name}</span><span class="tcard-meta">${tpl.slides}格 · ${tpl.photos}張 · 存${tpl.slides}圖</span>`;
     card.appendChild(info);
     grid.appendChild(card);
   });
@@ -418,6 +476,7 @@ function startEditor(tpl) {
   curTpl = tpl;
   slotPhotos = tpl.slots.map(() => null);
   activeSlot = -1;
+  textLayers = []; activeTextId = null;
   document.getElementById('editor-title').textContent = tpl.name;
 
   const cvs = document.getElementById('editor-canvas');
@@ -513,6 +572,16 @@ function renderEditor() {
   tpl.slots.forEach((sl, i) => {
     if (!isOv(sl)) return;
     drawOvSlot(ctx, sl, i, S, H, isLightBg);
+  });
+
+  // Pass 3: text layers
+  textLayers.forEach(tl => {
+    drawTextOnCtx(ctx, tl.text, tl.x, tl.y, tl.fontSize, tl.color, tl.bgColor);
+    if (tl.id === activeTextId) {
+      const bb = textBBox(ctx, tl);
+      ctx.strokeStyle = '#0095f6'; ctx.lineWidth = 2;
+      ctx.strokeRect(bb.x-1, bb.y-1, bb.w+2, bb.h+2);
+    }
   });
 }
 
@@ -668,9 +737,19 @@ function bindEvents() {
   cvs.addEventListener('touchstart', e => {
     e.preventDefault();
     hideUpdateBtn();
-    drag=null; pinch=null; tapInfo=null; swapStartSlot=-1; swapOverSlot=-1;
+    drag=null; pinch=null; tapInfo=null; swapStartSlot=-1; swapOverSlot=-1; textDrag=null;
     if (e.touches.length===1) {
       const pt=getXY(cvs,e.touches[0]);
+      // Check text layers first
+      const ti=hitTextLayer(pt.x,pt.y);
+      if(ti>=0) {
+        const tl=textLayers[ti];
+        activeTextId=tl.id; activeSlot=-1; renderEditor();
+        tapInfo={isText:true,id:tl.id,x:pt.x,y:pt.y};
+        textDrag={id:tl.id,x:pt.x,y:pt.y,ox:tl.x,oy:tl.y};
+        return;
+      }
+      activeTextId=null;
       const si=hitSlot(pt.x,pt.y);
       if(si<0) return;
       activeSlot=si; renderEditor();
@@ -690,6 +769,13 @@ function bindEvents() {
 
   cvs.addEventListener('touchmove', e => {
     e.preventDefault();
+    if(textDrag&&e.touches.length===1) {
+      const pt=getXY(cvs,e.touches[0]);
+      if(tapInfo){const dx=pt.x-tapInfo.x,dy=pt.y-tapInfo.y;if(Math.sqrt(dx*dx+dy*dy)>6)tapInfo=null;}
+      const tl=textLayers.find(t=>t.id===textDrag.id);
+      if(tl){tl.x=textDrag.ox+(pt.x-textDrag.x);tl.y=textDrag.oy+(pt.y-textDrag.y);renderEditor();}
+      return;
+    }
     if(pinch&&e.touches.length===2) {
       const d=pDist(e.touches);
       if(pinch.mode==='photo'&&activeSlot>=0&&slotPhotos[activeSlot]) {
@@ -720,7 +806,9 @@ function bindEvents() {
   cvs.addEventListener('touchend', e => {
     if(e.touches.length<2) pinch=null;
     if(e.touches.length===0) {
-      if(tapInfo!==null) {
+      if(tapInfo!==null && tapInfo.isText) {
+        showTextBtn(tapInfo.id);
+      } else if(tapInfo!==null) {
         if(!slotPhotos[tapInfo.si]) { fi.click(); }
         else { showUpdateBtn(tapInfo.si); }
       } else if(drag!==null && swapStartSlot>=0) {
@@ -735,7 +823,7 @@ function bindEvents() {
           showToast('照片已換位置');
         }
       }
-      drag=null; tapInfo=null; swapStartSlot=-1; swapOverSlot=-1;
+      drag=null; tapInfo=null; swapStartSlot=-1; swapOverSlot=-1; textDrag=null;
       renderEditor();
     }
   });
@@ -777,14 +865,134 @@ function pDist(t) {
   return Math.sqrt(dx*dx+dy*dy);
 }
 
+// ── Text editing ──────────────────────────────────────
+function openTextPanel(id) {
+  textEditingId = id;
+  const ti = document.getElementById('text-input');
+  if (id !== null) {
+    const tl = textLayers.find(t => t.id === id);
+    if (tl) {
+      ti.value = tl.text;
+      // Restore panel state to match existing layer
+      curTSz = tl.fontSize; curTColor = tl.color; curTBg = tl.bgColor;
+      document.querySelectorAll('.tsz-btn').forEach(b => b.classList.toggle('sel', +b.dataset.sz === curTSz));
+      document.querySelectorAll('.tclr-sw').forEach(b => b.classList.toggle('sel', b.dataset.c === curTColor));
+      document.querySelectorAll('.tbg-btn').forEach(b => b.classList.toggle('sel', b.dataset.bg === curTBg));
+      document.getElementById('tpanel-confirm').textContent = '更新';
+    }
+  } else {
+    ti.value = '';
+    document.getElementById('tpanel-confirm').textContent = '加入';
+  }
+  document.getElementById('text-panel').classList.add('show');
+  setTimeout(() => ti.focus(), 120);
+}
+
+function closeTextPanel() {
+  document.getElementById('text-panel').classList.remove('show');
+  document.getElementById('text-input').blur();
+  textEditingId = null;
+}
+
+function selectTSz(btn) {
+  document.querySelectorAll('.tsz-btn').forEach(b => b.classList.remove('sel'));
+  btn.classList.add('sel'); curTSz = +btn.dataset.sz;
+}
+function selectTColor(el) {
+  document.querySelectorAll('.tclr-sw').forEach(b => b.classList.remove('sel'));
+  el.classList.add('sel'); curTColor = el.dataset.c;
+}
+function selectTBg(btn) {
+  document.querySelectorAll('.tbg-btn').forEach(b => b.classList.remove('sel'));
+  btn.classList.add('sel'); curTBg = btn.dataset.bg;
+}
+
+function confirmTextEdit() {
+  const text = document.getElementById('text-input').value.trim();
+  if (!text) { closeTextPanel(); return; }
+  if (textEditingId !== null) {
+    const tl = textLayers.find(t => t.id === textEditingId);
+    if (tl) { tl.text = text; tl.fontSize = curTSz; tl.color = curTColor; tl.bgColor = curTBg; }
+  } else {
+    // Place at center of visible canvas area
+    const scroll = document.getElementById('editor-scroll');
+    const cx = (scroll.scrollLeft + scroll.clientWidth / 2) / viewScale;
+    const cy = (scroll.scrollTop + scroll.clientHeight / 2) / viewScale;
+    textLayers.push({ id: Date.now(), text, x: cx, y: cy, fontSize: curTSz, color: curTColor, bgColor: curTBg });
+  }
+  closeTextPanel();
+  activeTextId = null;
+  renderEditor();
+}
+
+function deleteActiveText() {
+  textLayers = textLayers.filter(t => t.id !== activeTextId);
+  activeTextId = null; hideUpdateBtn(); renderEditor();
+}
+
+function showTextBtn(id) {
+  activeTextId = id;
+  const tl = textLayers.find(t => t.id === id);
+  if (!tl) return;
+  const cvs = document.getElementById('editor-canvas');
+  const rect = cvs.getBoundingClientRect();
+  const btn = document.getElementById('update-btn');
+  btn.innerHTML = `<button onclick="openTextPanel(activeTextId)">編輯文字</button><button onclick="deleteActiveText()">刪除</button><button class="ubtn-cancel" onclick="hideUpdateBtn()">取消</button>`;
+  btn.style.left = (rect.left + tl.x * viewScale) + 'px';
+  btn.style.top  = (rect.top  + tl.y * viewScale) + 'px';
+  btn.classList.add('show');
+}
+
+// Draw text layer onto ctx; tx/ty are already in canvas coordinates
+function drawTextOnCtx(ctx, text, tx, ty, fontSize, color, bgColor) {
+  ctx.font = `600 ${fontSize}px -apple-system,'PingFang TC',sans-serif`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  const lines = text.split('\n');
+  const lineH = fontSize * 1.3;
+  const totalH = lines.length * lineH;
+  const maxW = Math.max(...lines.map(l => ctx.measureText(l).width));
+  const pad = fontSize * 0.28;
+  if (bgColor && bgColor !== 'none') {
+    ctx.fillStyle = bgColor;
+    const rx = tx - maxW/2 - pad, ry = ty - totalH/2 - pad;
+    const rw = maxW + pad*2, rh = totalH + pad*2, r = Math.min(pad*.6, 8);
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(rx, ry, rw, rh, r); else ctx.rect(rx, ry, rw, rh);
+    ctx.fill();
+  }
+  ctx.fillStyle = color;
+  lines.forEach((line, i) => ctx.fillText(line, tx, ty - totalH/2 + lineH*(i+0.5)));
+}
+
+// Bounding box of a text layer in logical canvas coords
+function textBBox(ctx, tl) {
+  ctx.font = `600 ${tl.fontSize}px -apple-system,'PingFang TC',sans-serif`;
+  const lines = tl.text.split('\n');
+  const lineH = tl.fontSize * 1.3;
+  const totalH = lines.length * lineH;
+  const maxW = Math.max(...lines.map(l => ctx.measureText(l).width));
+  const pad = tl.fontSize * 0.28;
+  return { x: tl.x - maxW/2 - pad, y: tl.y - totalH/2 - pad, w: maxW+pad*2, h: totalH+pad*2 };
+}
+
+function hitTextLayer(x, y) {
+  const cvs = document.getElementById('editor-canvas');
+  const ctx = cvs.getContext('2d');
+  for (let i = textLayers.length - 1; i >= 0; i--) {
+    const bb = textBBox(ctx, textLayers[i]);
+    if (x >= bb.x && x <= bb.x+bb.w && y >= bb.y && y <= bb.y+bb.h) return i;
+  }
+  return -1;
+}
+
 // ── Export ────────────────────────────────────────────
 async function saveAll() {
   const tpl=curTpl;
   if(!slotPhotos.some(p=>p&&p.img)){showToast('請先加入至少一張照片');return;}
   showToast(`正在產生 ${tpl.slides} 張圖片...`);
 
-  const EP=EXPORT_PX;
-  const EPH=Math.round(EP*(tpl.aspect||1));  // export height
+  const EP = tpl.exportW || EXPORT_PX;
+  const EPH = tpl.exportH || Math.round(EP*(tpl.aspect||1));
   const ratio=EP/LOGICAL_S;
   const container=document.getElementById('export-imgs');
   container.innerHTML='';
@@ -852,6 +1060,16 @@ async function saveAll() {
         ctx.fillStyle='#2a2a2a'; ctx.fillRect(-iw/2,-ih/2,iw,ih);
       }
       ctx.restore(); ctx.restore();
+    });
+
+    // Pass 3: text layers for this slide
+    const scl = EP / LOGICAL_S;
+    textLayers.forEach(tl => {
+      // Only draw if text center is within this slide's x range
+      if (tl.x < si*LOGICAL_S || tl.x >= (si+1)*LOGICAL_S) return;
+      const tx = (tl.x - si*LOGICAL_S) * scl;
+      const ty = tl.y * scl;
+      drawTextOnCtx(ctx, tl.text, tx, ty, tl.fontSize * scl, tl.color, tl.bgColor);
     });
 
     const item=document.createElement('div');
