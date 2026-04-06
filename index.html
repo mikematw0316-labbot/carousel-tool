@@ -68,7 +68,7 @@
     #toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
     #editor-tools{ display:flex; gap:8px; padding:0 0 8px; }
     .tool-btn{ background:#222; border:1px solid #333; border-radius:20px; color:#fff; font-size:13px; font-weight:500; padding:7px 18px; cursor:pointer; min-height:36px; font-family:inherit; }
-    #text-panel{ position:fixed; inset:0; background:rgba(0,0,0,.65); z-index:300; display:none; flex-direction:column; justify-content:flex-end; }
+    #text-panel{ position:fixed; inset:0; background:rgba(0,0,0,.28); z-index:300; display:none; flex-direction:column; justify-content:flex-end; }
     #text-panel.show{ display:flex; }
     #text-panel-inner{ background:#1c1c1e; border-radius:20px 20px 0 0; padding:18px 16px; padding-bottom:max(22px,env(safe-area-inset-bottom)); display:flex; flex-direction:column; gap:12px; }
     #text-input{ width:100%; background:#2a2a2a; border:none; border-radius:12px; color:#fff; font-size:16px; padding:12px 14px; min-height:68px; resize:none; font-family:inherit; outline:none; }
@@ -92,6 +92,10 @@
     .tbgc-sw.sel{ border-color:#0095f6; box-shadow:0 0 0 1px #0095f6; }
     #tbg-color-row{ display:none; }
     #tbg-color-row.show{ display:flex; }
+    .tshd-btn{ flex:1; background:#2a2a2a; border:1px solid #3a3a3a; border-radius:10px; color:#fff; font-size:13px; padding:7px 0; cursor:pointer; font-family:inherit; }
+    .tshd-btn.sel{ background:#fff; color:#000; border-color:#fff; }
+    .tclr-picker-wrap{ position:relative; width:30px; height:30px; border-radius:50%; overflow:hidden; flex-shrink:0; cursor:pointer; border:2px solid #555; }
+    .tclr-picker-wrap input[type=color]{ position:absolute; inset:-6px; width:calc(100%+12px); height:calc(100%+12px); border:none; cursor:pointer; padding:0; }
   </style>
 </head>
 <body>
@@ -148,7 +152,7 @@
 </div>
 <div id="text-panel">
   <div id="text-panel-inner">
-    <textarea id="text-input" placeholder="輸入文字..."></textarea>
+    <textarea id="text-input" placeholder="輸入文字..." oninput="updatePreview()"></textarea>
     <div class="topt-row">
       <span class="topt-lbl">大小</span>
       <button class="tsz-btn sel" data-sz="28" onclick="selectTSz(this)">小</button>
@@ -165,9 +169,21 @@
       <span class="topt-lbl">顏色</span>
       <div class="tclr-sw sel" data-c="#ffffff" style="background:#fff" onclick="selectTColor(this)"></div>
       <div class="tclr-sw" data-c="#000000" style="background:#000;border-color:#555" onclick="selectTColor(this)"></div>
-      <div class="tclr-sw" data-c="#ffdd00" style="background:#ffdd00" onclick="selectTColor(this)"></div>
-      <div class="tclr-sw" data-c="#ff4455" style="background:#f45" onclick="selectTColor(this)"></div>
-      <div class="tclr-sw" data-c="#44aaff" style="background:#4af" onclick="selectTColor(this)"></div>
+      <div class="tclr-sw" data-c="#ff3b30" style="background:#ff3b30" onclick="selectTColor(this)"></div>
+      <div class="tclr-sw" data-c="#ff9500" style="background:#ff9500" onclick="selectTColor(this)"></div>
+      <div class="tclr-sw" data-c="#ffcc00" style="background:#ffcc00" onclick="selectTColor(this)"></div>
+      <div class="tclr-sw" data-c="#34c759" style="background:#34c759" onclick="selectTColor(this)"></div>
+      <div class="tclr-sw" data-c="#007aff" style="background:#007aff" onclick="selectTColor(this)"></div>
+      <div class="tclr-sw" data-c="#af52de" style="background:#af52de" onclick="selectTColor(this)"></div>
+      <label class="tclr-picker-wrap" id="tclr-custom-wrap" style="background:#888" title="自訂色">
+        <input type="color" id="tclr-custom" value="#888888" oninput="selectTColorPicker(this)">
+      </label>
+    </div>
+    <div class="topt-row">
+      <span class="topt-lbl">陰影</span>
+      <button class="tshd-btn sel" data-sh="none" onclick="selectTShadow(this)">無</button>
+      <button class="tshd-btn" data-sh="light" onclick="selectTShadow(this)">淺</button>
+      <button class="tshd-btn" data-sh="deep" onclick="selectTShadow(this)">深</button>
     </div>
     <div class="topt-row">
       <span class="topt-lbl">底形</span>
@@ -182,10 +198,16 @@
       <span class="topt-lbl">底色</span>
       <div class="tbgc-sw sel" data-bc="#000000" style="background:#000;border-color:#555" onclick="selectTBgColor(this)"></div>
       <div class="tbgc-sw" data-bc="#ffffff" style="background:#fff" onclick="selectTBgColor(this)"></div>
-      <div class="tbgc-sw" data-bc="#ffdd00" style="background:#ffdd00" onclick="selectTBgColor(this)"></div>
-      <div class="tbgc-sw" data-bc="#ff4455" style="background:#f45" onclick="selectTBgColor(this)"></div>
-      <div class="tbgc-sw" data-bc="#44aaff" style="background:#4af" onclick="selectTBgColor(this)"></div>
+      <div class="tbgc-sw" data-bc="#ff3b30" style="background:#ff3b30" onclick="selectTBgColor(this)"></div>
+      <div class="tbgc-sw" data-bc="#ff9500" style="background:#ff9500" onclick="selectTBgColor(this)"></div>
+      <div class="tbgc-sw" data-bc="#ffcc00" style="background:#ffcc00" onclick="selectTBgColor(this)"></div>
+      <div class="tbgc-sw" data-bc="#34c759" style="background:#34c759" onclick="selectTBgColor(this)"></div>
+      <div class="tbgc-sw" data-bc="#007aff" style="background:#007aff" onclick="selectTBgColor(this)"></div>
+      <div class="tbgc-sw" data-bc="#af52de" style="background:#af52de" onclick="selectTBgColor(this)"></div>
       <div class="tbgc-sw" data-bc="rgba(0,0,0,0.5)" style="background:rgba(0,0,0,.5)" onclick="selectTBgColor(this)"></div>
+      <label class="tclr-picker-wrap" id="tbgc-custom-wrap" style="background:#444" title="自訂色">
+        <input type="color" id="tbgc-custom" value="#444444" oninput="selectTBgColorPicker(this)">
+      </label>
     </div>
     <div class="tpanel-acts">
       <button id="tpanel-cancel" onclick="closeTextPanel()">取消</button>
@@ -222,6 +244,12 @@ const TPLS = [
   // 四格錯位 — 1000×1920，交替上下錯位
   { id:'por6b', cat:'portrait', name:'四直錯位', slides:4, photos:4, aspect:1.92, exportW:1000, exportH:1920,
     slots:[{x:0,y:0,w:1,h:0.84},{x:1,y:0.16,w:1,h:0.84},{x:2,y:0,w:1,h:0.84},{x:3,y:0.16,w:1,h:0.84}] },
+
+  // 四直押圖 — 錯位底圖 + 兩張押圖跨縫
+  { id:'por7', cat:'portrait', name:'四直押圖', slides:4, photos:6, aspect:1.92, exportW:1000, exportH:1920,
+    slots:[{x:0,y:0,w:1,h:0.84},{x:1,y:0.16,w:1,h:0.84},{x:2,y:0,w:1,h:0.84},{x:3,y:0.16,w:1,h:0.84},
+           {ov:true,cx:1.0,cy:0.4,w:0.52,h:0.6,rot:-5,frame:1,shadow:true},
+           {ov:true,cx:3.0,cy:0.6,w:0.52,h:0.6,rot:5,frame:1,shadow:true}] },
 
   // 圖押圖 — two backgrounds, portrait overlay straddling boundary
   { id:'por8', cat:'portrait', name:'雙直押圖', slides:2, photos:3, aspect:1.25,
@@ -304,7 +332,9 @@ let textLayers = [];
 let activeTextId = null;
 let textEditingId = null;
 let textDrag = null;
-let curTSz = 28, curTColor = '#ffffff', curTFont = 'sans', curTBgShape = 'none', curTBgColor = '#000000';
+let textHandleDrag = null;
+let previewText = null;
+let curTSz = 28, curTColor = '#ffffff', curTFont = 'sans', curTBgShape = 'none', curTBgColor = '#000000', curTShadow = 'none';
 
 // ── Sample photos (preloaded for gallery previews) ─────
 const SAMPLE_URLS = [
@@ -601,13 +631,13 @@ function renderEditor() {
 
   // Pass 3: text layers
   textLayers.forEach(tl => {
-    drawTextOnCtx(ctx, tl.text, tl.x, tl.y, tl.fontSize, tl.color, tl.bgShape||'none', tl.bgColor||'#000', tl.fontFam||'sans');
-    if (tl.id === activeTextId) {
-      const bb = textBBox(ctx, tl);
-      ctx.strokeStyle = '#0095f6'; ctx.lineWidth = 2;
-      ctx.strokeRect(bb.x-1, bb.y-1, bb.w+2, bb.h+2);
-    }
+    if (previewText && tl.id === textEditingId) return; // live preview replaces this layer
+    drawTextOnCtx(ctx, tl.text, tl.x, tl.y, tl.fontSize, tl.color, tl.bgShape||'none', tl.bgColor||'#000', tl.fontFam||'sans', tl.shadow||'none', tl.rot||0);
+    if (tl.id === activeTextId && !previewText) drawTextHandles(ctx, tl);
   });
+  if (previewText) {
+    drawTextOnCtx(ctx, previewText.text, previewText.x, previewText.y, previewText.fontSize, previewText.color, previewText.bgShape||'none', previewText.bgColor||'#000', previewText.fontFam||'sans', previewText.shadow||'none', 0);
+  }
 }
 
 function drawPlus(ctx, cx, cy, r, active, darkBg=true) {
@@ -762,9 +792,26 @@ function bindEvents() {
   cvs.addEventListener('touchstart', e => {
     e.preventDefault();
     hideUpdateBtn();
-    drag=null; pinch=null; tapInfo=null; swapStartSlot=-1; swapOverSlot=-1; textDrag=null;
     if (e.touches.length===1) {
       const pt=getXY(cvs,e.touches[0]);
+      // Check text resize/rotation handles first (when a text is active)
+      if (activeTextId) {
+        const activeTl=textLayers.find(t=>t.id===activeTextId);
+        if (activeTl) {
+          const handle=hitHandle(pt.x,pt.y,activeTl);
+          if (handle) {
+            drag=null; pinch=null; tapInfo=null; swapStartSlot=-1; swapOverSlot=-1; textDrag=null;
+            if (handle==='rot') {
+              textHandleDrag={type:'rotate',id:activeTl.id,initAngle:Math.atan2(pt.y-activeTl.y,pt.x-activeTl.x),initRot:activeTl.rot||0};
+            } else {
+              const d0=Math.sqrt((pt.x-activeTl.x)**2+(pt.y-activeTl.y)**2);
+              textHandleDrag={type:'resize',id:activeTl.id,d0:Math.max(d0,5),initFsz:activeTl.fontSize};
+            }
+            return;
+          }
+        }
+      }
+      drag=null; pinch=null; tapInfo=null; swapStartSlot=-1; swapOverSlot=-1; textDrag=null; textHandleDrag=null;
       // Check text layers first
       const ti=hitTextLayer(pt.x,pt.y);
       if(ti>=0) {
@@ -784,7 +831,7 @@ function bindEvents() {
         swapStartSlot=si;
       }
     } else if (e.touches.length===2) {
-      tapInfo=null; drag=null;
+      tapInfo=null; drag=null; textHandleDrag=null;
       const d0=pDist(e.touches);
       const hasPhoto=activeSlot>=0&&slotPhotos[activeSlot];
       pinch = hasPhoto ? {mode:'photo',d0,s0:slotPhotos[activeSlot].scale}
@@ -794,6 +841,21 @@ function bindEvents() {
 
   cvs.addEventListener('touchmove', e => {
     e.preventDefault();
+    if(textHandleDrag&&e.touches.length===1) {
+      const pt=getXY(cvs,e.touches[0]);
+      const tl=textLayers.find(t=>t.id===textHandleDrag.id);
+      if(tl) {
+        if(textHandleDrag.type==='resize') {
+          const d=Math.sqrt((pt.x-tl.x)**2+(pt.y-tl.y)**2);
+          tl.fontSize=Math.max(12,Math.min(250,textHandleDrag.initFsz*d/textHandleDrag.d0));
+        } else if(textHandleDrag.type==='rotate') {
+          const angle=Math.atan2(pt.y-tl.y,pt.x-tl.x);
+          tl.rot=textHandleDrag.initRot+(angle-textHandleDrag.initAngle);
+        }
+        renderEditor();
+      }
+      return;
+    }
     if(textDrag&&e.touches.length===1) {
       const pt=getXY(cvs,e.touches[0]);
       if(tapInfo){const dx=pt.x-tapInfo.x,dy=pt.y-tapInfo.y;if(Math.sqrt(dx*dx+dy*dy)>6)tapInfo=null;}
@@ -829,6 +891,7 @@ function bindEvents() {
   },{passive:false});
 
   cvs.addEventListener('touchend', e => {
+    if(textHandleDrag){ textHandleDrag=null; return; }
     if(e.touches.length<2) pinch=null;
     if(e.touches.length===0) {
       if(tapInfo!==null && tapInfo.isText) {
@@ -898,12 +961,13 @@ function openTextPanel(id) {
     const tl = textLayers.find(t => t.id === id);
     if (tl) {
       ti.value = tl.text;
-      curTSz=tl.fontSize; curTColor=tl.color; curTFont=tl.fontFam||'sans'; curTBgShape=tl.bgShape||'none'; curTBgColor=tl.bgColor||'#000000';
+      curTSz=tl.fontSize; curTColor=tl.color; curTFont=tl.fontFam||'sans'; curTBgShape=tl.bgShape||'none'; curTBgColor=tl.bgColor||'#000000'; curTShadow=tl.shadow||'none';
       document.querySelectorAll('.tsz-btn').forEach(b => b.classList.toggle('sel', +b.dataset.sz===curTSz));
       document.querySelectorAll('.tclr-sw').forEach(b => b.classList.toggle('sel', b.dataset.c===curTColor));
       document.querySelectorAll('.tfont-btn').forEach(b => b.classList.toggle('sel', b.dataset.f===curTFont));
       document.querySelectorAll('.tshp-btn').forEach(b => b.classList.toggle('sel', b.dataset.sh===curTBgShape));
       document.querySelectorAll('.tbgc-sw').forEach(b => b.classList.toggle('sel', b.dataset.bc===curTBgColor));
+      document.querySelectorAll('.tshd-btn').forEach(b => b.classList.toggle('sel', b.dataset.sh===curTShadow));
       document.getElementById('tbg-color-row').classList.toggle('show', curTBgShape!=='none');
       document.getElementById('tpanel-confirm').textContent = '更新';
     }
@@ -912,36 +976,70 @@ function openTextPanel(id) {
     document.getElementById('tpanel-confirm').textContent = '加入';
   }
   document.getElementById('text-panel').classList.add('show');
+  updatePreview();
   setTimeout(() => ti.focus(), 120);
 }
 
 function closeTextPanel() {
+  previewText = null;
   document.getElementById('text-panel').classList.remove('show');
   document.getElementById('text-input').blur();
   textEditingId = null;
+  renderEditor();
+}
+
+function updatePreview() {
+  const rawText = document.getElementById('text-input').value;
+  const text = rawText || '文字預覽';
+  let px, py;
+  if (textEditingId !== null) {
+    const tl = textLayers.find(t => t.id === textEditingId);
+    px = tl ? tl.x : curTpl.slides * LOGICAL_S / 2;
+    py = tl ? tl.y : Math.round(LOGICAL_S * (curTpl.aspect || 1)) / 2;
+  } else {
+    px = curTpl.slides * LOGICAL_S / 2;
+    py = Math.round(LOGICAL_S * (curTpl.aspect || 1)) / 2;
+  }
+  previewText = { text, x:px, y:py, fontSize:curTSz, color:curTColor, fontFam:curTFont, bgShape:curTBgShape, bgColor:curTBgColor, shadow:curTShadow };
+  renderEditor();
 }
 
 function selectTSz(btn) {
   document.querySelectorAll('.tsz-btn').forEach(b => b.classList.remove('sel'));
-  btn.classList.add('sel'); curTSz = +btn.dataset.sz;
+  btn.classList.add('sel'); curTSz = +btn.dataset.sz; updatePreview();
 }
 function selectTColor(el) {
   document.querySelectorAll('.tclr-sw').forEach(b => b.classList.remove('sel'));
-  el.classList.add('sel'); curTColor = el.dataset.c;
+  el.classList.add('sel'); curTColor = el.dataset.c; updatePreview();
+}
+function selectTColorPicker(inp) {
+  document.getElementById('tclr-custom-wrap').style.background = inp.value;
+  document.querySelectorAll('.tclr-sw').forEach(b => b.classList.remove('sel'));
+  curTColor = inp.value; updatePreview();
 }
 function selectTFont(btn) {
   document.querySelectorAll('.tfont-btn').forEach(b => b.classList.remove('sel'));
-  btn.classList.add('sel'); curTFont = btn.dataset.f;
+  btn.classList.add('sel'); curTFont = btn.dataset.f; updatePreview();
+}
+function selectTShadow(btn) {
+  document.querySelectorAll('.tshd-btn').forEach(b => b.classList.remove('sel'));
+  btn.classList.add('sel'); curTShadow = btn.dataset.sh; updatePreview();
 }
 function selectTBgShape(btn) {
   document.querySelectorAll('.tshp-btn').forEach(b => b.classList.remove('sel'));
   btn.classList.add('sel'); curTBgShape = btn.dataset.sh;
   const row = document.getElementById('tbg-color-row');
   row.classList.toggle('show', curTBgShape !== 'none');
+  updatePreview();
 }
 function selectTBgColor(el) {
   document.querySelectorAll('.tbgc-sw').forEach(b => b.classList.remove('sel'));
-  el.classList.add('sel'); curTBgColor = el.dataset.bc;
+  el.classList.add('sel'); curTBgColor = el.dataset.bc; updatePreview();
+}
+function selectTBgColorPicker(inp) {
+  document.getElementById('tbgc-custom-wrap').style.background = inp.value;
+  document.querySelectorAll('.tbgc-sw').forEach(b => b.classList.remove('sel'));
+  curTBgColor = inp.value; updatePreview();
 }
 
 function confirmTextEdit() {
@@ -949,12 +1047,12 @@ function confirmTextEdit() {
   if (!text) { closeTextPanel(); return; }
   if (textEditingId !== null) {
     const tl = textLayers.find(t => t.id === textEditingId);
-    if (tl) { tl.text=text; tl.fontSize=curTSz; tl.color=curTColor; tl.fontFam=curTFont; tl.bgShape=curTBgShape; tl.bgColor=curTBgColor; }
+    if (tl) { tl.text=text; tl.fontSize=curTSz; tl.color=curTColor; tl.fontFam=curTFont; tl.bgShape=curTBgShape; tl.bgColor=curTBgColor; tl.shadow=curTShadow; }
   } else {
     // Place at canvas center (reliable cross-template)
     const cx = curTpl.slides * LOGICAL_S / 2;
     const cy = Math.round(LOGICAL_S * (curTpl.aspect || 1)) / 2;
-    textLayers.push({ id:Date.now(), text, x:cx, y:cy, fontSize:curTSz, color:curTColor, fontFam:curTFont, bgShape:curTBgShape, bgColor:curTBgColor });
+    textLayers.push({ id:Date.now(), text, x:cx, y:cy, fontSize:curTSz, color:curTColor, fontFam:curTFont, bgShape:curTBgShape, bgColor:curTBgColor, shadow:curTShadow, rot:0 });
   }
   closeTextPanel();
   activeTextId = null;
@@ -986,7 +1084,11 @@ const FONT_FAMILIES = {
 };
 
 // Draw text layer onto ctx; tx/ty are already in canvas coordinates
-function drawTextOnCtx(ctx, text, tx, ty, fontSize, color, bgShape, bgColor, fontFam) {
+function drawTextOnCtx(ctx, text, tx, ty, fontSize, color, bgShape, bgColor, fontFam, shadow, rot) {
+  ctx.save();
+  if (rot) { ctx.translate(tx, ty); ctx.rotate(rot); ctx.translate(-tx, -ty); }
+  if (shadow === 'light') { ctx.shadowColor='rgba(0,0,0,.6)'; ctx.shadowBlur=fontSize*0.35; ctx.shadowOffsetX=1; ctx.shadowOffsetY=2; }
+  else if (shadow === 'deep') { ctx.shadowColor='rgba(0,0,0,.9)'; ctx.shadowBlur=fontSize*0.75; ctx.shadowOffsetX=2; ctx.shadowOffsetY=4; }
   const fam = FONT_FAMILIES[fontFam] || FONT_FAMILIES.sans;
   ctx.font = `700 ${fontSize}px ${fam}`;
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
@@ -1016,9 +1118,11 @@ function drawTextOnCtx(ctx, text, tx, ty, fontSize, color, bgShape, bgColor, fon
       if (ctx.roundRect) ctx.roundRect(bx,by,bw,bh,r); else ctx.rect(bx,by,bw,bh);
     }
     ctx.fill(); ctx.restore();
+    ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0;
   }
   ctx.fillStyle = color;
   lines.forEach((line, i) => ctx.fillText(line, tx, ty - totalH/2 + lineH*(i+0.5)));
+  ctx.restore();
 }
 
 // Bounding box of a text layer in logical canvas coords
@@ -1031,6 +1135,33 @@ function textBBox(ctx, tl) {
   const maxW = Math.max(...lines.map(l => ctx.measureText(l).width));
   const pad = tl.fontSize * 0.28;
   return { x: tl.x - maxW/2 - pad, y: tl.y - totalH/2 - pad, w: maxW+pad*2, h: totalH+pad*2 };
+}
+
+function drawTextHandles(ctx, tl) {
+  const bb = textBBox(ctx, tl);
+  const HS = 14;
+  ctx.strokeStyle = '#0095f6'; ctx.lineWidth = 2;
+  ctx.strokeRect(bb.x-1, bb.y-1, bb.w+2, bb.h+2);
+  const corners = [[bb.x-1,bb.y-1],[bb.x+bb.w-HS+1,bb.y-1],[bb.x-1,bb.y+bb.h-HS+1],[bb.x+bb.w-HS+1,bb.y+bb.h-HS+1]];
+  ctx.fillStyle='#fff'; ctx.lineWidth=1.5;
+  corners.forEach(([cx,cy])=>{ ctx.fillRect(cx,cy,HS,HS); ctx.strokeRect(cx,cy,HS,HS); });
+  const rx=bb.x+bb.w/2, ry=bb.y-26;
+  ctx.lineWidth=1.5; ctx.beginPath(); ctx.moveTo(bb.x+bb.w/2,bb.y-1); ctx.lineTo(rx,ry+10); ctx.stroke();
+  ctx.beginPath(); ctx.arc(rx,ry,10,0,Math.PI*2); ctx.fillStyle='#fff'; ctx.fill(); ctx.strokeStyle='#0095f6'; ctx.stroke();
+  ctx.fillStyle='#0095f6'; ctx.font='13px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText('↻',rx,ry+1);
+}
+
+function hitHandle(x, y, tl) {
+  const cvs=document.getElementById('editor-canvas');
+  const ctx=cvs.getContext('2d');
+  const bb=textBBox(ctx,tl);
+  const HS=14;
+  const corners=[{tag:'tl',cx:bb.x-1,cy:bb.y-1},{tag:'tr',cx:bb.x+bb.w-HS+1,cy:bb.y-1},{tag:'bl',cx:bb.x-1,cy:bb.y+bb.h-HS+1},{tag:'br',cx:bb.x+bb.w-HS+1,cy:bb.y+bb.h-HS+1}];
+  for(const c of corners){ if(x>=c.cx&&x<=c.cx+HS&&y>=c.cy&&y<=c.cy+HS) return c.tag; }
+  const rx=bb.x+bb.w/2, ry=bb.y-26;
+  if(Math.sqrt((x-rx)**2+(y-ry)**2)<=12) return 'rot';
+  return null;
 }
 
 function hitTextLayer(x, y) {
@@ -1127,7 +1258,7 @@ async function saveAll() {
       if (tl.x < si*LOGICAL_S || tl.x >= (si+1)*LOGICAL_S) return;
       const tx = (tl.x - si*LOGICAL_S) * scl;
       const ty = tl.y * scl;
-      drawTextOnCtx(ctx, tl.text, tx, ty, tl.fontSize*scl, tl.color, tl.bgShape||'none', tl.bgColor||'#000', tl.fontFam||'sans');
+      drawTextOnCtx(ctx, tl.text, tx, ty, tl.fontSize*scl, tl.color, tl.bgShape||'none', tl.bgColor||'#000', tl.fontFam||'sans', tl.shadow||'none', tl.rot||0);
     });
 
     const item=document.createElement('div');
