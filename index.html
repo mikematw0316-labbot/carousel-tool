@@ -76,10 +76,8 @@
   </div>
   <div id="tpl-grid"></div>
   <div id="cat-nav">
-    <button class="cat-nav-btn" onclick="scrollToCategory('basic')">基本</button>
-    <button class="cat-nav-btn" onclick="scrollToCategory('collage')">拼貼</button>
-    <button class="cat-nav-btn" onclick="scrollToCategory('editorial')">精選</button>
-    <button class="cat-nav-btn" onclick="scrollToCategory('overlay')">圖中圖</button>
+    <button class="cat-nav-btn" onclick="scrollToCategory('portrait')">直式</button>
+    <button class="cat-nav-btn" onclick="scrollToCategory('grid')">方格</button>
   </div>
 </div>
 
@@ -128,150 +126,109 @@
 //                cx/cy = center in slide-units; rot = degrees; frame = border % of min dim
 const TPLS = [
 
-  // ── 基本版型 ──
-  { id:'a1', cat:'basic', name:'雙格全景', slides:2, photos:1,
+  // ── 直式版型 (portrait, aspect 4:5 = 1.25) ──
+  // Coordinate note: x/w in slide-width units; y/h in slide-HEIGHT units (0–1)
+  // Overlay: cx in slide-width units, cy in slide-height units
+
+  { id:'por1', cat:'portrait', name:'雙直全景', slides:2, photos:1, aspect:1.25,
     slots:[{x:0,y:0,w:2,h:1}] },
-  { id:'a2', cat:'basic', name:'左大右雙', slides:2, photos:3,
-    slots:[{x:0,y:0,w:1,h:1},{x:1,y:0,w:1,h:.5},{x:1,y:.5,w:1,h:.5}] },
-  { id:'a3', cat:'basic', name:'三格全景', slides:3, photos:1,
+
+  { id:'por2', cat:'portrait', name:'雙直並排', slides:2, photos:2, aspect:1.25,
+    slots:[{x:0,y:0,w:1,h:1},{x:1,y:0,w:1,h:1}] },
+
+  // 錯位 — slide 1 top-aligned, slide 2 bottom-aligned
+  { id:'por3', cat:'portrait', name:'雙直錯位', slides:2, photos:2, aspect:1.25,
+    slots:[{x:0,y:0,w:1,h:0.84},{x:1,y:0.16,w:1,h:0.84}] },
+
+  { id:'por4', cat:'portrait', name:'三直全景', slides:3, photos:1, aspect:1.25,
     slots:[{x:0,y:0,w:3,h:1}] },
-  { id:'a4', cat:'basic', name:'全景加側', slides:3, photos:2,
-    slots:[{x:0,y:0,w:2,h:1},{x:2,y:0,w:1,h:1}] },
-  { id:'a5', cat:'basic', name:'側加全景', slides:3, photos:2,
-    slots:[{x:0,y:0,w:1,h:1},{x:1,y:0,w:2,h:1}] },
-  { id:'a6', cat:'basic', name:'三格並排', slides:3, photos:3,
+
+  { id:'por5', cat:'portrait', name:'三直並排', slides:3, photos:3, aspect:1.25,
     slots:[{x:0,y:0,w:1,h:1},{x:1,y:0,w:1,h:1},{x:2,y:0,w:1,h:1}] },
-  { id:'a7', cat:'basic', name:'右大左雙', slides:2, photos:3,
-    slots:[{x:0,y:0,w:1,h:.5},{x:0,y:.5,w:1,h:.5},{x:1,y:0,w:1,h:1}] },
-  { id:'a8', cat:'basic', name:'四格全景', slides:4, photos:1,
-    slots:[{x:0,y:0,w:4,h:1}] },
-  { id:'a9', cat:'basic', name:'四格並排', slides:4, photos:4,
+
+  // 三格錯位 — alternating up/down
+  { id:'por6', cat:'portrait', name:'三直錯位', slides:3, photos:3, aspect:1.25,
+    slots:[{x:0,y:0,w:1,h:0.84},{x:1,y:0.16,w:1,h:0.84},{x:2,y:0,w:1,h:0.84}] },
+
+  { id:'por7', cat:'portrait', name:'四直並排', slides:4, photos:4, aspect:1.25,
     slots:[{x:0,y:0,w:1,h:1},{x:1,y:0,w:1,h:1},{x:2,y:0,w:1,h:1},{x:3,y:0,w:1,h:1}] },
-  { id:'b1', cat:'basic', name:'側全景側', slides:4, photos:3,
-    slots:[{x:0,y:0,w:1,h:1},{x:1,y:0,w:2,h:1},{x:3,y:0,w:1,h:1}] },
-  { id:'b2', cat:'basic', name:'四格上下', slides:2, photos:4,
-    slots:[{x:0,y:0,w:1,h:.5},{x:0,y:.5,w:1,h:.5},{x:1,y:0,w:1,h:.5},{x:1,y:.5,w:1,h:.5}] },
-  { id:'b3', cat:'basic', name:'五格全景', slides:5, photos:1,
-    slots:[{x:0,y:0,w:5,h:1}] },
 
-  // ── 拼貼版型 ──
-  { id:'c1', cat:'collage', name:'上景下雙', slides:1, photos:3,
-    slots:[{x:0,y:0,w:1,h:.55},{x:0,y:.55,w:.5,h:.45},{x:.5,y:.55,w:.5,h:.45}] },
-  { id:'c2', cat:'collage', name:'下景上雙', slides:1, photos:3,
-    slots:[{x:0,y:0,w:.5,h:.45},{x:.5,y:0,w:.5,h:.45},{x:0,y:.45,w:1,h:.55}] },
-  { id:'c3', cat:'collage', name:'五格雜誌', slides:1, photos:5,
-    slots:[{x:0,y:0,w:1,h:.38},{x:0,y:.38,w:.5,h:.31},{x:.5,y:.38,w:.5,h:.31},{x:0,y:.69,w:.5,h:.31},{x:.5,y:.69,w:.5,h:.31}] },
-  { id:'c4', cat:'collage', name:'一大三欄', slides:2, photos:4,
-    slots:[{x:0,y:0,w:1,h:1},{x:1,y:0,w:1,h:.33},{x:1,y:.33,w:1,h:.34},{x:1,y:.67,w:1,h:.33}] },
-  { id:'c5', cat:'collage', name:'大景四格', slides:3, photos:5,
-    slots:[{x:0,y:0,w:2,h:1},{x:2,y:0,w:.5,h:.5},{x:2.5,y:0,w:.5,h:.5},{x:2,y:.5,w:.5,h:.5},{x:2.5,y:.5,w:.5,h:.5}] },
+  // 圖押圖 — two backgrounds, portrait overlay straddling boundary
+  { id:'por8', cat:'portrait', name:'雙直押圖', slides:2, photos:3, aspect:1.25,
+    slots:[{x:0,y:0,w:1,h:1},{x:1,y:0,w:1,h:1},
+           {ov:true,cx:1.0,cy:0.5,w:0.56,h:0.68,rot:-5,frame:1,shadow:true}] },
 
-  // ── 精選版型 — 多照片、現代排版、滑動有節奏感 ──
+  // 錯位 + 圖押圖
+  { id:'por9', cat:'portrait', name:'錯位押圖', slides:2, photos:3, aspect:1.25,
+    slots:[{x:0,y:0,w:1,h:0.84},{x:1,y:0.16,w:1,h:0.84},
+           {ov:true,cx:1.0,cy:0.5,w:0.56,h:0.68,rot:5,frame:1,shadow:true}] },
 
-  // 6 slides · 8 photos: full → full+overlay → split3 → panorama(2) → full
-  { id:'e1', cat:'editorial', name:'現代編輯 8 張', slides:6, photos:8,
-    slots:[
-      {x:0,y:0,w:1,h:1},
-      {x:1,y:0,w:1,h:1},
-      {ov:true,cx:1.60,cy:.48,w:.56,h:.74,rot:-4,frame:1,shadow:true},
-      {x:2,y:0,w:.58,h:1},
-      {x:2.58,y:0,w:.42,h:.50},
-      {x:2.58,y:.50,w:.42,h:.50},
-      {x:3,y:0,w:2,h:1},
-      {x:5,y:0,w:1,h:1},
-    ] },
+  // 全景底景 + overlay
+  { id:'por10', cat:'portrait', name:'底景押圖', slides:2, photos:2, aspect:1.25,
+    slots:[{x:0,y:0,w:2,h:1},
+           {ov:true,cx:1.0,cy:0.5,w:0.56,h:0.68,rot:3,frame:1,shadow:true}] },
 
-  // 4 slides · 7 photos: split → full+overlay → left+right2 → full
-  { id:'e2', cat:'editorial', name:'節奏四格 7 張', slides:4, photos:7,
-    slots:[
-      {x:0,y:0,w:.55,h:1},
-      {x:.55,y:0,w:.45,h:.5},
-      {x:.55,y:.5,w:.45,h:.5},
-      {x:1,y:0,w:1,h:1},
-      {ov:true,cx:1.55,cy:.50,w:.54,h:.72,rot:4,frame:1,shadow:true},
-      {x:2,y:0,w:1,h:1},
-      {x:3,y:0,w:1,h:1},
-    ] },
+  // 兩背景 + 兩個押圖，對角交叉
+  { id:'por11', cat:'portrait', name:'雙押交叉', slides:2, photos:4, aspect:1.25,
+    slots:[{x:0,y:0,w:1,h:1},{x:1,y:0,w:1,h:1},
+           {ov:true,cx:0.42,cy:0.64,w:0.52,h:0.62,rot:-4,frame:1,shadow:true},
+           {ov:true,cx:1.58,cy:0.36,w:0.52,h:0.62,rot:4,frame:1,shadow:true}] },
 
-  // 3 slides · 4 photos: top+bottom2 → panorama(2)
-  { id:'e3', cat:'editorial', name:'視角三段 4 張', slides:3, photos:4,
-    slots:[
-      {x:0,y:0,w:1,h:.56},
-      {x:0,y:.56,w:.5,h:.44},
-      {x:.5,y:.56,w:.5,h:.44},
-      {x:1,y:0,w:2,h:1},
-    ] },
+  // ── 方格版型 (square, aspect 1:1) ──
 
-  // 5 slides · 8 photos: full → 3-row left+wide right → full+overlay → split2
-  { id:'e4', cat:'editorial', name:'城市日記 8 張', slides:5, photos:8,
-    slots:[
-      {x:0,y:0,w:1,h:1},
-      {x:1,y:0,w:.38,h:.34},
-      {x:1,y:.34,w:.38,h:.33},
-      {x:1,y:.67,w:.38,h:.33},
-      {x:1.38,y:0,w:1.62,h:1},
-      {x:3,y:0,w:1,h:1},
-      {ov:true,cx:3.38,cy:.45,w:.52,h:.70,rot:-3,frame:1,shadow:true},
-      {x:4,y:0,w:.5,h:1},
-    ] },
+  // 2×2 四拼
+  { id:'sq1', cat:'grid', name:'一格四拼', slides:1, photos:4,
+    slots:[{x:0,y:0,w:0.5,h:0.5},{x:0.5,y:0,w:0.5,h:0.5},
+           {x:0,y:0.5,w:0.5,h:0.5},{x:0.5,y:0.5,w:0.5,h:0.5}] },
 
-  // ── 圖中圖 ──
-  // Based on SCRL reference: thick Polaroid frame, portrait overlay, subtle tilt, deliberate offset
+  { id:'sq2', cat:'grid', name:'單格全景', slides:1, photos:1,
+    slots:[{x:0,y:0,w:1,h:1}] },
 
-  // Slide1 full + Slide2 full + portrait overlay positioned RIGHT of slide2 center (+5°)
-  { id:'d1', cat:'overlay', name:'直式疊右', slides:2, photos:3,
-    slots:[
-      {x:0,y:0,w:1,h:1},
-      {x:1,y:0,w:1,h:1},
-      {ov:true, cx:1.65, cy:.50, w:.54, h:.74, rot:5,  frame:1, shadow:true},
-    ] },
+  { id:'sq3', cat:'grid', name:'雙格並排', slides:2, photos:2,
+    slots:[{x:0,y:0,w:1,h:1},{x:1,y:0,w:1,h:1}] },
 
-  // Slide1 full + Slide2 full + portrait overlay positioned LEFT of slide2 center (-4°)
-  { id:'d2', cat:'overlay', name:'直式疊左', slides:2, photos:3,
-    slots:[
-      {x:0,y:0,w:1,h:1},
-      {x:1,y:0,w:1,h:1},
-      {ov:true, cx:1.35, cy:.50, w:.54, h:.74, rot:-4, frame:1, shadow:true},
-    ] },
+  { id:'sq4', cat:'grid', name:'三格全景', slides:3, photos:1,
+    slots:[{x:0,y:0,w:3,h:1}] },
 
-  // Slide1 full + Slide2 full + portrait overlay straddling slide boundary (cx=1.0)
-  { id:'d3', cat:'overlay', name:'跨格直式疊', slides:2, photos:3,
-    slots:[
-      {x:0,y:0,w:1,h:1},
-      {x:1,y:0,w:1,h:1},
-      {ov:true, cx:1.00, cy:.50, w:.54, h:.74, rot:4,  frame:1, shadow:true},
-    ] },
+  { id:'sq5', cat:'grid', name:'四格全景', slides:4, photos:1,
+    slots:[{x:0,y:0,w:4,h:1}] },
 
-  // 2-slide panorama background + 1 portrait Polaroid (straddling center seam)
-  { id:'d4', cat:'overlay', name:'底景疊照', slides:2, photos:2,
-    slots:[
-      {x:0,y:0,w:2,h:1},
-      {ov:true, cx:1.00, cy:.50, w:.56, h:.74, rot:-4, frame:1, shadow:true},
-    ] },
+  // 單格拼貼：上大下雙
+  { id:'sq6', cat:'grid', name:'上景下雙', slides:1, photos:3,
+    slots:[{x:0,y:0,w:1,h:0.55},{x:0,y:0.55,w:0.5,h:0.45},{x:0.5,y:0.55,w:0.5,h:0.45}] },
 
-  // 2-slide panorama + 2 portrait Polaroids, left & right
-  { id:'d5', cat:'overlay', name:'底景雙疊', slides:2, photos:3,
-    slots:[
-      {x:0,y:0,w:2,h:1},
-      {ov:true, cx:.45, cy:.48, w:.52, h:.72, rot:-5, frame:1, shadow:true},
-      {ov:true, cx:1.55, cy:.52, w:.52, h:.72, rot:4,  frame:1, shadow:true},
-    ] },
+  // 左大右雙
+  { id:'sq7', cat:'grid', name:'左大右雙', slides:2, photos:3,
+    slots:[{x:0,y:0,w:1,h:1},{x:1,y:0,w:1,h:0.5},{x:1,y:0.5,w:1,h:0.5}] },
 
-  // 3-slide panorama + 3 portrait Polaroids (left/center/right offset each)
-  { id:'d6', cat:'overlay', name:'底景三疊', slides:3, photos:4,
-    slots:[
-      {x:0,y:0,w:3,h:1},
-      {ov:true, cx:.48, cy:.46, w:.52, h:.72, rot:-5, frame:1, shadow:true},
-      {ov:true, cx:1.50, cy:.54, w:.52, h:.72, rot:3,  frame:1, shadow:true},
-      {ov:true, cx:2.52, cy:.46, w:.52, h:.72, rot:-4, frame:1, shadow:true},
-    ] },
+  // 單格 + 押圖
+  { id:'sq8', cat:'grid', name:'單格押圖', slides:1, photos:2,
+    slots:[{x:0,y:0,w:1,h:1},
+           {ov:true,cx:0.5,cy:0.5,w:0.55,h:0.55,rot:-5,frame:1,shadow:true}] },
 
-  // 2 Polaroid photos on warm cream background (stacked/overlapping, portrait 872 style)
-  { id:'d7', cat:'overlay', name:'兩張疊放', slides:1, photos:2, bg:'#ddd8d0',
-    slots:[
-      {ov:true, cx:.38, cy:.40, w:.74, h:.82, rot:-4, frame:1, shadow:true},
-      {ov:true, cx:.72, cy:.66, w:.50, h:.66, rot:5,  frame:1, shadow:true},
-    ] },
+  // 雙格 + 押圖跨縫
+  { id:'sq9', cat:'grid', name:'雙格押圖', slides:2, photos:3,
+    slots:[{x:0,y:0,w:1,h:1},{x:1,y:0,w:1,h:1},
+           {ov:true,cx:1.0,cy:0.5,w:0.54,h:0.54,rot:5,frame:1,shadow:true}] },
+
+  // 全景底景 + 雙押圖
+  { id:'sq10', cat:'grid', name:'底景雙押', slides:2, photos:3,
+    slots:[{x:0,y:0,w:2,h:1},
+           {ov:true,cx:0.45,cy:0.48,w:0.52,h:0.52,rot:-5,frame:1,shadow:true},
+           {ov:true,cx:1.55,cy:0.52,w:0.52,h:0.52,rot:4,frame:1,shadow:true}] },
+
+  // 四格全景 + 三個押圖
+  { id:'sq11', cat:'grid', name:'三格三押', slides:3, photos:4,
+    slots:[{x:0,y:0,w:3,h:1},
+           {ov:true,cx:0.48,cy:0.46,w:0.50,h:0.50,rot:-5,frame:1,shadow:true},
+           {ov:true,cx:1.50,cy:0.54,w:0.50,h:0.50,rot:3,frame:1,shadow:true},
+           {ov:true,cx:2.52,cy:0.46,w:0.50,h:0.50,rot:-4,frame:1,shadow:true}] },
+
+  // 2×2四拼 + 中央押圖
+  { id:'sq12', cat:'grid', name:'四拼押圖', slides:1, photos:5,
+    slots:[{x:0,y:0,w:0.5,h:0.5},{x:0.5,y:0,w:0.5,h:0.5},
+           {x:0,y:0.5,w:0.5,h:0.5},{x:0.5,y:0.5,w:0.5,h:0.5},
+           {ov:true,cx:0.5,cy:0.5,w:0.50,h:0.50,rot:-4,frame:1,shadow:true}] },
 ];
 
 // Preview slot colours — muted tones that look good in gallery
@@ -279,7 +236,7 @@ const SLOT_COLORS  = ['#4a5260','#60504a','#4a604e','#564a60','#604e4a','#4a5660
 // Overlay preview uses warm neutral grays (like real photo paper)
 const OV_BG_COLOR  = '#a8a4a0';  // warm gray for photo slots in overlay templates
 const OV_FRM_COLOR = '#ffffff';  // pure white Polaroid frame
-const CAT_LABELS   = { basic:'基本版型', collage:'✦ 拼貼版型', editorial:'◎ 精選版型', overlay:'◈ 圖中圖' };
+const CAT_LABELS   = { portrait:'◧ 直式版型', grid:'▦ 方格版型' };
 
 // ── State ─────────────────────────────────────────────
 let curTpl = null;
@@ -356,12 +313,13 @@ function buildGallery() {
       ? MAX_TILE
       : Math.min(Math.floor(screenW / tpl.slides), MAX_TILE);
 
-    let dataURL = '', cardH = tileW;
+    const aspect = tpl.aspect || 1;
+    let dataURL = '', cardH = Math.round(tileW * aspect);
     try {
       const tempCvs = document.createElement('canvas');
       drawLayout(tempCvs, tpl, tileW, true);
       if (!needsScroll) cardH = Math.round(screenW * tempCvs.height / tempCvs.width);
-      // else cardH = tileW (one square slide height)
+      // else cardH = tileW * aspect (one slide height)
       dataURL = tempCvs.toDataURL('image/jpeg', 0.88);
       tempCvs.width = tempCvs.height = 0;  // free iOS canvas memory
     } catch(e) {
@@ -402,10 +360,11 @@ function buildGallery() {
 
 // ── Draw layout (gallery preview) ────────────────────
 function drawLayout(canvas, tpl, tileSize, gradient) {
-  const W = tpl.slides * tileSize, H = tileSize;
+  const aspect = tpl.aspect || 1;
+  const W = tpl.slides * tileSize;
+  const H = Math.round(tileSize * aspect);
   canvas.width = W; canvas.height = H;
   const ctx = canvas.getContext('2d');
-  // Always use black as gap color — gives strong contrast with real photos
   ctx.fillStyle = '#000';
   ctx.fillRect(0,0,W,H);
 
@@ -413,26 +372,26 @@ function drawLayout(canvas, tpl, tileSize, gradient) {
   const gap = Math.max(3, tileSize * 0.024);
   // Photo-mood gradients: vivid, photo-like colours per slot
   const PHOTO_MOODS = [
-    ['#e8b87a','#a06838'],  // golden hour / warm portrait
-    ['#7ab4e0','#3870a8'],  // bright sky blue
-    ['#a8cc80','#587840'],  // lush green nature
-    ['#f0a878','#a05838'],  // warm sunset orange
-    ['#88c0d0','#407888'],  // cool misty ocean
-    ['#e0b090','#906050'],  // sand / beach warm
-    ['#98cca8','#508060'],  // soft sage forest
-    ['#c8a8d0','#786088'],  // lavender dusk
+    ['#e8b87a','#a06838'],
+    ['#7ab4e0','#3870a8'],
+    ['#a8cc80','#587840'],
+    ['#f0a878','#a05838'],
+    ['#88c0d0','#407888'],
+    ['#e0b090','#906050'],
+    ['#98cca8','#508060'],
+    ['#c8a8d0','#786088'],
   ];
 
   // Pass 1: regular (background) slots
+  // x/w in slide-width units; y/h in slide-height units
   let slotIdx = 0;
   tpl.slots.forEach((sl, i) => {
     if (isOv(sl)) return;
-    const sx=sl.x*tileSize, sy=sl.y*tileSize, sw=sl.w*tileSize, sh=sl.h*tileSize;
+    const sx=sl.x*tileSize, sy=sl.y*H, sw=sl.w*tileSize, sh=sl.h*H;
     const x0=sx+gap, y0=sy+gap, w0=sw-gap*2, h0=sh-gap*2;
     const sImg = sampleImgs[slotIdx % sampleImgs.length];
     slotIdx++;
     if (sImg && sImg.naturalWidth) {
-      // Draw sample photo cover-fit into slot
       ctx.save();
       ctx.beginPath(); ctx.rect(x0, y0, w0, h0); ctx.clip();
       const pAR = sImg.naturalWidth / sImg.naturalHeight, sAR = w0 / h0;
@@ -448,16 +407,7 @@ function drawLayout(canvas, tpl, tileSize, gradient) {
     }
   });
 
-  // Subtle vignette for cream/paper backgrounds
-  if (tpl.bg) {
-    const rg = ctx.createRadialGradient(W/2,H/2,0, W/2,H/2,Math.max(W,H)*0.65);
-    rg.addColorStop(0,'rgba(0,0,0,0)');
-    rg.addColorStop(1,'rgba(0,0,0,0.08)');
-    ctx.fillStyle = rg;
-    ctx.fillRect(0,0,W,H);
-  }
-
-  // Slide dividers (stronger with real photos)
+  // Slide dividers
   ctx.strokeStyle = 'rgba(0,0,0,.7)'; ctx.lineWidth = Math.max(2, gap);
   for (let i=1; i<tpl.slides; i++) {
     ctx.beginPath(); ctx.moveTo(i*tileSize,0); ctx.lineTo(i*tileSize,H); ctx.stroke();
@@ -468,13 +418,13 @@ function drawLayout(canvas, tpl, tileSize, gradient) {
   let ovIdx = regCount;
   tpl.slots.forEach((sl, i) => {
     if (!isOv(sl)) return;
-    drawOvPreview(ctx, sl, tileSize, sampleImgs[ovIdx % sampleImgs.length] || null);
+    drawOvPreview(ctx, sl, tileSize, H, sampleImgs[ovIdx % sampleImgs.length] || null);
     ovIdx++;
   });
 }
 
-function drawOvPreview(ctx, sl, tileSize, sImg) {
-  const cx=sl.cx*tileSize, cy=sl.cy*tileSize;
+function drawOvPreview(ctx, sl, tileSize, H, sImg) {
+  const cx=sl.cx*tileSize, cy=sl.cy*H;
   const w=sl.w*tileSize, h=sl.h*tileSize;
   const rot=(sl.rot||0)*Math.PI/180;
   const fw = sl.frame ? Math.max(1, Math.round(2 * tileSize / LOGICAL_S)) : 0;
@@ -520,7 +470,7 @@ function startEditor(tpl) {
 
   const cvs = document.getElementById('editor-canvas');
   cvs.width  = tpl.slides * LOGICAL_S;
-  cvs.height = LOGICAL_S;
+  cvs.height = Math.round(LOGICAL_S * (tpl.aspect || 1));
 
   const scrollEl = document.getElementById('editor-scroll');
   const availW = scrollEl.clientWidth  || window.innerWidth;
@@ -560,6 +510,7 @@ function renderEditor() {
   const cvs = document.getElementById('editor-canvas');
   const ctx = cvs.getContext('2d');
   const S = LOGICAL_S, G = 3;
+  const H = Math.round(S * (tpl.aspect || 1));
 
   const isLightBg = !!tpl.bg;
   ctx.fillStyle = tpl.bg || '#111';
@@ -567,16 +518,16 @@ function renderEditor() {
 
   // Subtle vignette for cream/paper bg in editor
   if (isLightBg) {
-    const rg = ctx.createRadialGradient(cvs.width/2,S/2,0, cvs.width/2,S/2,Math.max(cvs.width,S)*0.65);
+    const rg = ctx.createRadialGradient(cvs.width/2,H/2,0, cvs.width/2,H/2,Math.max(cvs.width,H)*0.65);
     rg.addColorStop(0,'rgba(0,0,0,0)');
     rg.addColorStop(1,'rgba(0,0,0,0.07)');
-    ctx.fillStyle=rg; ctx.fillRect(0,0,cvs.width,S);
+    ctx.fillStyle=rg; ctx.fillRect(0,0,cvs.width,H);
   }
 
-  // Pass 1: regular (background) slots
+  // Pass 1: regular slots (x/w in slide-width units; y/h in slide-height units)
   tpl.slots.forEach((sl, i) => {
     if (isOv(sl)) return;
-    const sx=sl.x*S, sy=sl.y*S, sw=sl.w*S, sh=sl.h*S;
+    const sx=sl.x*S, sy=sl.y*H, sw=sl.w*S, sh=sl.h*H;
     const x0=sx+G, y0=sy+G, w0=sw-G*2, h0=sh-G*2;
     ctx.save();
     ctx.beginPath(); ctx.rect(x0,y0,w0,h0); ctx.clip();
@@ -592,7 +543,6 @@ function renderEditor() {
       ctx.strokeStyle='#0095f6'; ctx.lineWidth=3;
       ctx.strokeRect(x0+1.5,y0+1.5,w0-3,h0-3);
     }
-    // Swap drop-target highlight
     if (i===swapOverSlot) {
       ctx.fillStyle='rgba(255,255,255,.22)';
       ctx.fillRect(x0,y0,w0,h0);
@@ -604,13 +554,13 @@ function renderEditor() {
   // Slide dividers
   ctx.strokeStyle='rgba(255,255,255,.18)'; ctx.lineWidth=1;
   for (let i=1; i<tpl.slides; i++) {
-    ctx.beginPath(); ctx.moveTo(i*S,0); ctx.lineTo(i*S,S); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(i*S,0); ctx.lineTo(i*S,H); ctx.stroke();
   }
 
   // Pass 2: overlay slots (on top)
   tpl.slots.forEach((sl, i) => {
     if (!isOv(sl)) return;
-    drawOvSlot(ctx, sl, i, S, isLightBg);
+    drawOvSlot(ctx, sl, i, S, H, isLightBg);
   });
 }
 
@@ -631,8 +581,8 @@ function drawPhotoClip(ctx, img, slotX, slotY, slotW, slotH, ox, oy, scale) {
   ctx.drawImage(img, slotX+(slotW-dw)/2+ox, slotY+(slotH-dh)/2+oy, dw, dh);
 }
 
-function drawOvSlot(ctx, sl, i, S, lightBg=false) {
-  const cx=sl.cx*S, cy=sl.cy*S, w=sl.w*S, h=sl.h*S;
+function drawOvSlot(ctx, sl, i, S, H, lightBg=false) {
+  const cx=sl.cx*S, cy=sl.cy*H, w=sl.w*S, h=sl.h*S;
   const rot=(sl.rot||0)*Math.PI/180;
   const fw = sl.frame ? 2 : 0;
   const ph=slotPhotos[i];
@@ -682,13 +632,14 @@ function showUpdateBtn(si) {
   const cvs = document.getElementById('editor-canvas');
   const rect = cvs.getBoundingClientRect();
   const S = LOGICAL_S;
+  const H = Math.round(S * (curTpl.aspect || 1));
   let bx, by;
   if (isOv(sl)) {
     bx = rect.left + sl.cx * S * viewScale;
-    by = rect.top  + sl.cy * S * viewScale;
+    by = rect.top  + sl.cy * H * viewScale;
   } else {
     bx = rect.left + (sl.x + sl.w / 2) * S * viewScale;
-    by = rect.top  + (sl.y + sl.h / 2) * S * viewScale;
+    by = rect.top  + (sl.y + sl.h / 2) * H * viewScale;
   }
   const btn = document.getElementById('update-btn');
   btn.style.left = bx + 'px';
@@ -709,11 +660,12 @@ function replacePhoto() {
 // ── Hit testing ───────────────────────────────────────
 function hitSlot(x, y) {
   const S = LOGICAL_S;
+  const H = Math.round(S * (curTpl.aspect || 1));
   // Overlay slots are on top → check in reverse order first
   for (let i=curTpl.slots.length-1; i>=0; i--) {
     const sl=curTpl.slots[i];
     if (!isOv(sl)) continue;
-    const cx=sl.cx*S, cy=sl.cy*S, hw=sl.w*S/2, hh=sl.h*S/2;
+    const cx=sl.cx*S, cy=sl.cy*H, hw=sl.w*S/2, hh=sl.h*S/2;
     const ang=-(sl.rot||0)*Math.PI/180;
     const dx=x-cx, dy=y-cy;
     const lx=dx*Math.cos(ang)-dy*Math.sin(ang);
@@ -724,7 +676,7 @@ function hitSlot(x, y) {
   for (let i=0; i<curTpl.slots.length; i++) {
     const sl=curTpl.slots[i];
     if(isOv(sl)) continue;
-    if(x>=sl.x*S && x<(sl.x+sl.w)*S && y>=sl.y*S && y<(sl.y+sl.h)*S) return i;
+    if(x>=sl.x*S && x<(sl.x+sl.w)*S && y>=sl.y*H && y<(sl.y+sl.h)*H) return i;
   }
   return -1;
 }
@@ -879,20 +831,22 @@ async function saveAll() {
   if(!slotPhotos.some(p=>p&&p.img)){showToast('請先加入至少一張照片');return;}
   showToast(`正在產生 ${tpl.slides} 張圖片...`);
 
-  const EP=EXPORT_PX, ratio=EP/LOGICAL_S;
+  const EP=EXPORT_PX;
+  const EPH=Math.round(EP*(tpl.aspect||1));  // export height
+  const ratio=EP/LOGICAL_S;
   const container=document.getElementById('export-imgs');
   container.innerHTML='';
 
   for(let si=0;si<tpl.slides;si++){
     const off=document.createElement('canvas');
-    off.width=off.height=EP;
+    off.width=EP; off.height=EPH;
     const ctx=off.getContext('2d');
-    ctx.fillStyle=tpl.bg||'#111'; ctx.fillRect(0,0,EP,EP);
+    ctx.fillStyle=tpl.bg||'#111'; ctx.fillRect(0,0,EP,EPH);
 
-    // Pass 1: regular slots
+    // Pass 1: regular slots (x/w in slide-width units; y/h in slide-height units)
     tpl.slots.forEach((sl,i)=>{
       if(isOv(sl)) return;
-      const slotX=sl.x*EP, slotY=sl.y*EP, slotW=sl.w*EP, slotH=sl.h*EP;
+      const slotX=sl.x*EP, slotY=sl.y*EPH, slotW=sl.w*EP, slotH=sl.h*EPH;
       const slideL=si*EP;
       const oL=Math.max(slotX,slideL), oR=Math.min(slotX+slotW,slideL+EP);
       if(oL>=oR) return;
@@ -913,13 +867,13 @@ async function saveAll() {
       ctx.restore();
     });
 
-    // Pass 2: overlay slots
+    // Pass 2: overlay slots (cx in width units, cy in height units)
     tpl.slots.forEach((sl,i)=>{
       if(!isOv(sl)) return;
-      const cx=(sl.cx-si)*EP, cy=sl.cy*EP;
+      const cx=(sl.cx-si)*EP, cy=sl.cy*EPH;
       const w=sl.w*EP, h=sl.h*EP;
       const rot=(sl.rot||0)*Math.PI/180;
-      const fw = sl.frame ? Math.round(2 * EP / LOGICAL_S) : 0;
+      const fw=sl.frame ? Math.round(2*EP/LOGICAL_S) : 0;
       const ph=slotPhotos[i];
 
       ctx.save();
@@ -958,6 +912,7 @@ async function saveAll() {
     label.textContent=`第 ${si+1} 格（共 ${tpl.slides} 格）`;
     item.appendChild(imgEl); item.appendChild(label);
     container.appendChild(item);
+    off.width=off.height=0;  // free iOS canvas memory
   }
   document.getElementById('export-overlay').classList.add('show');
 }
