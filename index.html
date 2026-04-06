@@ -1404,6 +1404,7 @@ async function saveAll() {
       const rot=(sl.rot||0)*Math.PI/180;
       const fw=sl.frame ? Math.round(2*EP/LOGICAL_S) : 0;
       const ph=slotPhotos[i];
+      if(!ph||!ph.img) return;
 
       ctx.save();
       ctx.translate(cx,cy); ctx.rotate(rot);
