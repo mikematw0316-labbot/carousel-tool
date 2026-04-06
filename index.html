@@ -399,10 +399,12 @@ function drawLayout(canvas, tpl, tileSize, gradient) {
   const W = tpl.slides * tileSize, H = tileSize;
   canvas.width = W; canvas.height = H;
   const ctx = canvas.getContext('2d');
-  ctx.fillStyle = tpl.bg || '#000';
+  // Always use black as gap color — gives strong contrast with real photos
+  ctx.fillStyle = '#000';
   ctx.fillRect(0,0,W,H);
 
-  const gap = Math.max(2, tileSize * 0.016);
+  // Gap between slots — 3px min so real photos have clear grid lines
+  const gap = Math.max(3, tileSize * 0.024);
   // Photo-mood gradients: vivid, photo-like colours per slot
   const PHOTO_MOODS = [
     ['#e8b87a','#a06838'],  // golden hour / warm portrait
