@@ -271,14 +271,12 @@ const TPLS = [
     previewSlots:[{x:0,y:0,w:1,h:0.84},{x:1,y:0.16,w:1,h:0.84},{x:2,y:0,w:1,h:0.84},{x:3,y:0.16,w:1,h:0.84}],
     slots:[{x:0,y:0,w:1,h:1},{x:1,y:0,w:1,h:1},{x:2,y:0,w:1,h:1},{x:3,y:0,w:1,h:1}] },
 
-  // 四直押圖 — 全幅底圖 + 兩張押圖跨縫
-  { id:'por7', cat:'portrait', name:'四直押圖', slides:4, photos:6, aspect:1.92, exportW:1000, exportH:1920,
-    slots:[{x:0,y:0,w:1,h:1},{x:1,y:0,w:1,h:1},{x:2,y:0,w:1,h:1},{x:3,y:0,w:1,h:1},
-           {ov:true,cx:1.0,cy:0.4,w:0.52,h:0.6,rot:-5,frame:1,shadow:true},
-           {ov:true,cx:3.0,cy:0.6,w:0.52,h:0.6,rot:5,frame:1,shadow:true}] },
-
-  // 四直押圖2 — 全幅底圖 + 三張押圖（兩側縫 + 中央）
-  { id:'por7b', cat:'portrait', name:'四直押圖2', slides:4, photos:7, aspect:1.92, exportW:1000, exportH:1920,
+  // 四直押圖 — 全幅底圖 + 三張押圖，預覽錯位黑邊，匯出全幅（FB自動錯位）
+  { id:'por7b', cat:'portrait', name:'四直押圖', slides:4, photos:7, aspect:1.92, exportW:1000, exportH:1920,
+    previewSlots:[{x:0,y:0,w:1,h:0.84},{x:1,y:0.16,w:1,h:0.84},{x:2,y:0,w:1,h:0.84},{x:3,y:0.16,w:1,h:0.84},
+                  {ov:true,cx:1.0,cy:0.38,w:0.52,h:0.6,rot:-5,frame:1,shadow:true},
+                  {ov:true,cx:2.0,cy:0.5,w:0.52,h:0.6,rot:3,frame:1,shadow:true},
+                  {ov:true,cx:3.0,cy:0.62,w:0.52,h:0.6,rot:5,frame:1,shadow:true}],
     slots:[{x:0,y:0,w:1,h:1},{x:1,y:0,w:1,h:1},{x:2,y:0,w:1,h:1},{x:3,y:0,w:1,h:1},
            {ov:true,cx:1.0,cy:0.38,w:0.52,h:0.6,rot:-5,frame:1,shadow:true},
            {ov:true,cx:2.0,cy:0.5,w:0.52,h:0.6,rot:3,frame:1,shadow:true},
