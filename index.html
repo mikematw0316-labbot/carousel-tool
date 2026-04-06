@@ -586,6 +586,13 @@ function renderEditor() {
       ctx.strokeStyle='#0095f6'; ctx.lineWidth=3;
       ctx.strokeRect(x0+1.5,y0+1.5,w0-3,h0-3);
     }
+    // Swap drop-target highlight
+    if (i===swapOverSlot) {
+      ctx.fillStyle='rgba(255,255,255,.22)';
+      ctx.fillRect(x0,y0,w0,h0);
+      ctx.strokeStyle='#fff'; ctx.lineWidth=3;
+      ctx.strokeRect(x0+1.5,y0+1.5,w0-3,h0-3);
+    }
   });
 
   // Slide dividers
@@ -717,7 +724,7 @@ function hitSlot(x, y) {
 }
 
 // ── Events ────────────────────────────────────────────
-let drag=null, pinch=null, tapInfo=null;
+let drag=null, pinch=null, tapInfo=null, swapStartSlot=-1, swapOverSlot=-1;
 
 function bindEvents() {
   const cvs = document.getElementById('editor-canvas');
@@ -751,14 +758,17 @@ function bindEvents() {
   cvs.addEventListener('touchstart', e => {
     e.preventDefault();
     hideUpdateBtn();
-    drag=null; pinch=null; tapInfo=null;
+    drag=null; pinch=null; tapInfo=null; swapStartSlot=-1; swapOverSlot=-1;
     if (e.touches.length===1) {
       const pt=getXY(cvs,e.touches[0]);
       const si=hitSlot(pt.x,pt.y);
       if(si<0) return;
       activeSlot=si; renderEditor();
       tapInfo={si,x:pt.x,y:pt.y};
-      if(slotPhotos[si]) drag={x:pt.x,y:pt.y,ox:slotPhotos[si].ox,oy:slotPhotos[si].oy};
+      if(slotPhotos[si]) {
+        drag={x:pt.x,y:pt.y,ox:slotPhotos[si].ox,oy:slotPhotos[si].oy};
+        swapStartSlot=si;
+      }
     } else if (e.touches.length===2) {
       tapInfo=null; drag=null;
       const d0=pDist(e.touches);
@@ -785,8 +795,14 @@ function bindEvents() {
         const dx=pt.x-tapInfo.x,dy=pt.y-tapInfo.y;
         if(Math.sqrt(dx*dx+dy*dy)>6) tapInfo=null;
       }
-      slotPhotos[activeSlot].ox=drag.ox+(pt.x-drag.x);
-      slotPhotos[activeSlot].oy=drag.oy+(pt.y-drag.y);
+      // Track which slot we're hovering over for swap
+      const hoverSi=hitSlot(pt.x,pt.y);
+      swapOverSlot=(swapStartSlot>=0&&hoverSi>=0&&hoverSi!==swapStartSlot)?hoverSi:-1;
+      // Only pan photo if not hovering over a swap target
+      if(swapOverSlot<0) {
+        slotPhotos[activeSlot].ox=drag.ox+(pt.x-drag.x);
+        slotPhotos[activeSlot].oy=drag.oy+(pt.y-drag.y);
+      }
       renderEditor();
     }
   },{passive:false});
@@ -797,8 +813,20 @@ function bindEvents() {
       if(tapInfo!==null) {
         if(!slotPhotos[tapInfo.si]) { fi.click(); }
         else { showUpdateBtn(tapInfo.si); }
+      } else if(drag!==null && swapStartSlot>=0) {
+        // Drag ended — check if released on a different slot → swap
+        const t=e.changedTouches[0];
+        const pt=getXY(cvs,t);
+        const endSlot=hitSlot(pt.x,pt.y);
+        if(endSlot>=0 && endSlot!==swapStartSlot) {
+          const tmp=slotPhotos[swapStartSlot];
+          slotPhotos[swapStartSlot]=slotPhotos[endSlot]||null;
+          slotPhotos[endSlot]=tmp;
+          showToast('照片已換位置');
+        }
       }
-      drag=null; tapInfo=null;
+      drag=null; tapInfo=null; swapStartSlot=-1; swapOverSlot=-1;
+      renderEditor();
     }
   });
 
