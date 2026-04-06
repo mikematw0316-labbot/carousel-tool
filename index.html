@@ -20,9 +20,9 @@
     .hbtn.lg{ font-size:24px; }
     .hbtn.blue{ color:var(--blue); font-weight:600; }
 
-    #tpl-grid{ flex:1; overflow-y:auto; display:grid; grid-template-columns:1fr; gap:1px; background:#000; }
+    #tpl-grid{ flex:1; overflow-y:auto; display:grid; grid-template-columns:1fr; gap:2px; background:#1a1a1a; padding:0 2px; }
     .cat-hdr{ background:#000; padding:22px 16px 8px; font-size:10px; font-weight:600; color:rgba(255,255,255,.65); letter-spacing:.14em; text-transform:uppercase; }
-    .tcard{ background:#111; cursor:pointer; position:relative; overflow:hidden; }
+    .tcard{ background:#111; cursor:pointer; position:relative; overflow:hidden; outline:1px solid rgba(255,255,255,.12); }
     .tcard:active{ opacity:.8; }
     .tcard img{ display:block; pointer-events:none; }
     .tcard-info{ position:absolute; bottom:0; left:0; right:0; padding:36px 14px 12px; background:linear-gradient(transparent,rgba(0,0,0,.92)); display:flex; align-items:flex-end; justify-content:space-between; pointer-events:none; }
@@ -451,9 +451,8 @@ function drawLayout(canvas, tpl, tileSize, gradient) {
     ctx.fillRect(0,0,W,H);
   }
 
-  // Slide dividers
-  const dividerColor = tpl.bg ? 'rgba(0,0,0,.12)' : 'rgba(255,255,255,.1)';
-  ctx.strokeStyle = dividerColor; ctx.lineWidth=1;
+  // Slide dividers (stronger with real photos)
+  ctx.strokeStyle = 'rgba(0,0,0,.7)'; ctx.lineWidth = Math.max(2, gap);
   for (let i=1; i<tpl.slides; i++) {
     ctx.beginPath(); ctx.moveTo(i*tileSize,0); ctx.lineTo(i*tileSize,H); ctx.stroke();
   }
