@@ -1408,6 +1408,77 @@ async function saveAll() {
   const container=document.getElementById('export-imgs');
   container.innerHTML='';
 
+  // ── preview2x2 special export: render full 2×2 composite, then cut 4 quadrants
+  if (tpl.preview2x2) {
+    const EP2=EP*2, G=Math.round(3*ratio);
+    const full=document.createElement('canvas');
+    full.width=EP2; full.height=EP2;
+    const fctx=full.getContext('2d');
+    fctx.fillStyle=tpl.bg||(tpl.blackBg?'#000':'#111'); fctx.fillRect(0,0,EP2,EP2);
+    // Pass 1: 4 regular slots
+    tpl.slots.forEach((sl,i)=>{
+      if(isOv(sl)) return;
+      const col=i%2, row=Math.floor(i/2);
+      const sx=col*EP, sy=row*EP;
+      const x0=sx+G, y0=sy+G, w0=EP-G*2, h0=EP-G*2;
+      const ph=slotPhotos[i];
+      fctx.save(); fctx.beginPath(); fctx.rect(x0,y0,w0,h0); fctx.clip();
+      if(ph&&ph.img){
+        const img=ph.img, AR=img.naturalWidth/img.naturalHeight;
+        let dw,dh;
+        if(AR>1){dh=EP*ph.scale;dw=dh*AR;}else{dw=EP*ph.scale;dh=dw/AR;}
+        fctx.drawImage(img, sx+(EP-dw)/2+ph.ox*ratio, sy+(EP-dh)/2+ph.oy*ratio, dw, dh);
+      } else {
+        fctx.fillStyle='#1d1d1d'; fctx.fillRect(x0,y0,w0,h0);
+      }
+      fctx.restore();
+    });
+    // Dividers
+    fctx.strokeStyle='rgba(0,0,0,.6)'; fctx.lineWidth=G;
+    fctx.beginPath(); fctx.moveTo(EP,0); fctx.lineTo(EP,EP2); fctx.stroke();
+    fctx.beginPath(); fctx.moveTo(0,EP); fctx.lineTo(EP2,EP); fctx.stroke();
+    // Pass 2: overlay — place at center of full 2×2 canvas
+    tpl.slots.forEach((sl,i)=>{
+      if(!isOv(sl)) return;
+      const ph=slotPhotos[i]; if(!ph||!ph.img) return;
+      const cx=EP, cy=EP; // center of 2×2 (sl.cx=2.0,sl.cy=0.5 in panoramic → remapped to center)
+      const w=sl.w*EP, h=sl.h*EP, rot=(sl.rot||0)*Math.PI/180;
+      const fw=sl.frame?Math.round(2*ratio):0;
+      fctx.save(); fctx.translate(cx,cy); fctx.rotate(rot);
+      if(sl.shadow){fctx.shadowColor='rgba(0,0,0,.45)';fctx.shadowBlur=28*ratio;fctx.shadowOffsetX=6*ratio;fctx.shadowOffsetY=8*ratio;}
+      if(fw>0){
+        fctx.fillStyle='#f0f0f0';
+        if(sl.circle){fctx.beginPath();fctx.arc(0,0,Math.min(w,h)/2,0,Math.PI*2);fctx.fill();}
+        else{fctx.fillRect(-w/2,-h/2,w,h);}
+        fctx.shadowColor='transparent'; fctx.shadowBlur=0;
+      }
+      const iw=w-fw*2, ih=h-fw*2;
+      fctx.save(); fctx.beginPath();
+      if(sl.circle){fctx.arc(0,0,Math.min(iw,ih)/2,0,Math.PI*2);}else{fctx.rect(-iw/2,-ih/2,iw,ih);}
+      fctx.clip();
+      const img=ph.img, AR=img.naturalWidth/img.naturalHeight, sAR=iw/ih;
+      let dw,dh;
+      if(AR>sAR){dh=ih*ph.scale;dw=dh*AR;}else{dw=iw*ph.scale;dh=dw/AR;}
+      fctx.drawImage(img, -(dw/2)+ph.ox*ratio, -(dh/2)+ph.oy*ratio, dw, dh);
+      fctx.restore(); fctx.restore();
+    });
+    // Cut 4 quadrants and output
+    [{col:0,row:0,label:'左上'},{col:1,row:0,label:'右上'},{col:0,row:1,label:'左下'},{col:1,row:1,label:'右下'}]
+      .forEach(({col,row,label},qi)=>{
+        const off=document.createElement('canvas'); off.width=EP; off.height=EP;
+        off.getContext('2d').drawImage(full, col*EP, row*EP, EP, EP, 0, 0, EP, EP);
+        const item=document.createElement('div'); item.className='export-item';
+        const imgEl=document.createElement('img'); imgEl.src=off.toDataURL('image/png'); imgEl.alt=label;
+        const lbl=document.createElement('div'); lbl.className='export-label';
+        lbl.textContent=`${label}（第 ${qi+1} 格，共 4 格）`;
+        item.appendChild(imgEl); item.appendChild(lbl); container.appendChild(item);
+        off.width=off.height=0;
+      });
+    full.width=full.height=0;
+    document.getElementById('export-overlay').classList.add('show');
+    return;
+  }
+
   for(let si=0;si<tpl.slides;si++){
     const off=document.createElement('canvas');
     off.width=EP; off.height=EPH;
